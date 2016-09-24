@@ -90,15 +90,15 @@
 <meta property="og:url" content="http://xuyajun.xyz/2016/09/24/Spring-beans/index.html">
 <meta property="og:site_name" content="西西弗的神话">
 <meta property="og:description" content="&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
-<meta property="og:image" content="http://xuyajun.xyz/./images/XmlBeanFactory.png">
+<meta property="og:image" content="http://xuyajun.xyz/~/images/XmlBeanFactory.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/BeanFactory.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/RootBeanDefinition.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/XmlBeanDefinitionReader.png">
-<meta property="og:updated_time" content="2016-09-24T14:56:22.000Z">
+<meta property="og:updated_time" content="2016-09-24T15:03:07.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring-beans">
 <meta name="twitter:description" content="&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
-<meta name="twitter:image" content="http://xuyajun.xyz/./images/XmlBeanFactory.png">
+<meta name="twitter:image" content="http://xuyajun.xyz/~/images/XmlBeanFactory.png">
 
 
 
@@ -339,7 +339,7 @@
         <p>&nbsp; &nbsp; &nbsp; &nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。<br><a id="more"></a></p>
 <h1 id="先做点准备工作："><a href="#先做点准备工作：" class="headerlink" title="先做点准备工作："></a>先做点准备工作：</h1><p>1.下载spring源码，选择的是3.2.15版本。<br>2.因为spring已经由maven转向gradle,所以需要较为深刻的了解下gradle。通过gradle查看依赖树，从整体上弄清每个模块的关系和功能。<br>3.gradle编译源码遇到问题：”A problem occurred configuring project ‘:spring-orm-hibernate4’”，通过Google，这个貌似是3.2版本和gradle版本的不兼容造成的。先不折腾，注释掉merge.into语句。<br>4.将源码文件夹改为只读，防止不小心修改<br>   <code>chmod -R 555 spring-framework-3.2.15.RELEASE</code></p>
 <h1 id="Bean"><a href="#Bean" class="headerlink" title="Bean:"></a>Bean:</h1><p>&nbsp; &nbsp; &nbsp; &nbsp;开始肯定是先找到一个切入类，我的做法是快速浏览一下项目的结构，熟悉每个package大概是什么功能。比如Spring-beans结构由annotation，factory，propertyeditors，support几个包组成，还有很多未放入包的类，不过，一看类名就知道大概是工具类和自定义的异常类。至于几个package，annotation里面定义了一些注解，propertyeditors定义了数据类型之间的转换，support提供了对bean排序等的一些支持功能，继续展开factory，终于找到一个熟悉的类XmlBeanFactory。<br>&nbsp; &nbsp; &nbsp; &nbsp;相信大家刚开始学习spring的时候肯定写过这行代码：<br><code>BeanFactory factory = new XmlBeanFactory(new ClassPathResource(&quot;applicationContext.xml&quot;));</code><br>&nbsp; &nbsp; &nbsp; &nbsp;打开发现该类已经@Deprecated，谷歌了一下，和猜想的一样，3.1版本已经被applicationcontext替换。<br><code>BeanFactory factory = new ClassPathXmlApplicationContext(&quot;applicationContext.xml&quot;);</code><br>而applicationcontext属于context模块下，但还是基于beans模块实现的。不管，先研究下XmlBeanFactory。</p>
-<h2 id="创建bean"><a href="#创建bean" class="headerlink" title="创建bean"></a>创建bean</h2><p>用idea显示出XmlBeanFactory的类图：<img src="./images/XmlBeanFactory.png" alt="alt text"></p>
+<h2 id="创建bean"><a href="#创建bean" class="headerlink" title="创建bean"></a>创建bean</h2><p>用idea显示出XmlBeanFactory的类图：<img src="~/images/XmlBeanFactory.png" alt="alt text"></p>
 <p>ok,从BeanFactory入手，看看bean怎么被生产的，方法如图：<img src="images/BeanFactory.png" alt="alt text">典型的工厂模式，这个就是创建bean的顶级工厂。<br>BeanFactory有三个直接子类，也都是接口，初步看了一下，对应的功能分别如下:  </p>
 <ul>
 <li>ListableBeanFactory: 可批量创建bean，获取bean信息</li>
