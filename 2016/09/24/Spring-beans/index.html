@@ -84,15 +84,30 @@
 
 
 
-<meta name="description" content="当写代码的喜欢上哲学，那就要刨根问底了。。。">
-<meta property="og:type" content="website">
-<meta property="og:title" content="西西弗的神话">
-<meta property="og:url" content="http://xuyajun.xyz/index.html">
+<meta name="description" content="&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。
+先做点准备工作：
+下载spring源码，选择的是3.2.15版本。
+因为spring已经由maven转向gradl">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring-beans">
+<meta property="og:url" content="http://xuyajun.xyz/2016/09/24/Spring-beans/index.html">
 <meta property="og:site_name" content="西西弗的神话">
-<meta property="og:description" content="当写代码的喜欢上哲学，那就要刨根问底了。。。">
+<meta property="og:description" content="&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。
+先做点准备工作：
+下载spring源码，选择的是3.2.15版本。
+因为spring已经由maven转向gradl">
+<meta property="og:image" content="http://xuyajun.xyz/images/XmlBeanFactory.png">
+<meta property="og:image" content="http://xuyajun.xyz/images/BeanFactory.png">
+<meta property="og:image" content="http://xuyajun.xyz/images/RootBeanDefinition.png">
+<meta property="og:image" content="http://xuyajun.xyz/images/XmlBeanDefinitionReader.png">
+<meta property="og:updated_time" content="2016-09-24T14:04:40.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="西西弗的神话">
-<meta name="twitter:description" content="当写代码的喜欢上哲学，那就要刨根问底了。。。">
+<meta name="twitter:title" content="Spring-beans">
+<meta name="twitter:description" content="&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。
+先做点准备工作：
+下载spring源码，选择的是3.2.15版本。
+因为spring已经由maven转向gradl">
+<meta name="twitter:image" content="http://xuyajun.xyz/images/XmlBeanFactory.png">
 
 
 
@@ -113,9 +128,9 @@
 
 
 
-  <link rel="canonical" href="http://xuyajun.xyz/"/>
+  <link rel="canonical" href="http://xuyajun.xyz/2016/09/24/Spring-beans/"/>
 
-  <title> 西西弗的神话 </title>
+  <title> Spring-beans | 西西弗的神话 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -136,9 +151,7 @@
     
   
 
-  <div class="container one-collumn sidebar-position-left 
-   page-home 
- ">
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -235,9 +248,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
   
@@ -257,10 +270,7 @@
             
             
               
-                
-                <a class="post-title-link" href="/2016/09/24/Spring-beans/" itemprop="url">
-                  Spring-beans
-                </a>
+                Spring-beans
               
             
           </h1>
@@ -335,9 +345,7 @@
       
 
       
-        
-          
-            <p>&nbsp; &nbsp; &nbsp; &nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。</p>
+        <p>&nbsp; &nbsp; &nbsp; &nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。</p>
 <h4 id="先做点准备工作："><a href="#先做点准备工作：" class="headerlink" title="先做点准备工作："></a>先做点准备工作：</h4><ol>
 <li>下载spring源码，选择的是3.2.15版本。</li>
 <li>因为spring已经由maven转向gradle,所以需要较为深刻的了解下gradle。通过gradle查看依赖树，从整体上弄清每个模块的关系和功能。</li>
@@ -457,279 +465,41 @@ ctx.refresh();
 </ol>
 <p>&nbsp; &nbsp; &nbsp; &nbsp;spring-beans模块暂时先阅读到这里，我们已经看到了核心的功能是怎么实现的。后面阅读其他模块时，还会需要回来看看的。下一个进行攻克的是spring-context模块。<br>&nbsp; &nbsp; &nbsp; &nbsp;对于怎么去高效的阅读源码，我仍处于摸索当中。怎么用博客去更好的记录和表达我的阅读成果，对我也是个挑战。相信在时间的积淀下，我会找到读源码的正确姿势，同时，我也将慢慢进行改进，在博客中加入时序图等更加直观的方式来表达。👊</p>
 
-          
-        
       
     </div>
 
     <div>
       
+        
+
+      
     </div>
 
     <div>
       
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
         
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/08/31/邂逅心学/" itemprop="url">
-                  邂逅心学
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-08-31T19:23:12+08:00" content="2016-08-31">
-              2016-08-31
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/哲学/" itemprop="url" rel="index">
-                    <span itemprop="name">哲学</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/08/31/邂逅心学/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/08/31/邂逅心学/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-             <span id="/2016/08/31/邂逅心学/" class="leancloud_visitors" data-flag-title="邂逅心学">
-               &nbsp; | &nbsp;
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               <span class="post-meta-item-text">阅读次数 </span>
-               <span class="leancloud-visitors-count"></span>
-              </span>
-          
-
-          
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat-reward-image.png" alt="yajun xu WeChat Pay"/>
+          <p>微信打赏</p>
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
       
       
-
-      
-        
-          <p>&nbsp; &nbsp; &nbsp; &nbsp;从来没有想过自己会有这么喜欢哲学的一天，而开启我的哲学学习之旅的是课本中曾一带而过的阳明心学。<br>&nbsp; &nbsp; &nbsp; &nbsp;记不清具体哪天又重新认识了心学。去年的实习时期，15年的10月份左右。当时我在杭州网易实习，租着一间独卫单间，12平米，和女友异地。那段时间学习欲望很强，激情很高。除了像往常一样的钻研技术，也会强迫自己去健身房健身。可能是因为从高中开始就没有读过文学书，看到办公室外的书架上摆着世界名著，我很欣喜的挑了几本回去看。
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/08/31/邂逅心学/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/08/28/关于写博客的心路历程/" itemprop="url">
-                  关于写博客的心路历程
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-08-28T22:23:12+08:00" content="2016-08-28">
-              2016-08-28
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/扯淡/" itemprop="url" rel="index">
-                    <span itemprop="name">扯淡</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/08/28/关于写博客的心路历程/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/08/28/关于写博客的心路历程/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-             <span id="/2016/08/28/关于写博客的心路历程/" class="leancloud_visitors" data-flag-title="关于写博客的心路历程">
-               &nbsp; | &nbsp;
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               <span class="post-meta-item-text">阅读次数 </span>
-               <span class="leancloud-visitors-count"></span>
-              </span>
-          
-
-          
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay-reward-image.png" alt="yajun xu Alipay"/>
+          <p>支付宝打赏</p>
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="取个题目都好难"><a href="#取个题目都好难" class="headerlink" title="取个题目都好难"></a>取个题目都好难</h2><p>&nbsp; &nbsp; &nbsp; &nbsp;许久没写字，当手放在键盘上，不是为了敲代码，聊天，而是为了写文章，却发现码字速率骤降，几分钟憋不出一句话。就拿这篇博客题目来说，我想扯下自己写博客的思想斗争，于是很自然的写上“关于写博客的心历路程”这个题目，但是写完之后总感觉怪怪的，心历路程？是这个词语吗？于是又很自然的搜索了一把，果然，应该是“心路历程”。😓</p>
-<h2 id="为嘛写博客"><a href="#为嘛写博客" class="headerlink" title="为嘛写博客"></a>为嘛写博客</h2>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/08/28/关于写博客的心路历程/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
       
     </div>
+  </div>
 
-    <div>
-      
-    </div>
 
-    <div>
       
     </div>
 
@@ -737,19 +507,32 @@ ctx.refresh();
       
 
       
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/08/31/邂逅心学/" rel="next" title="邂逅心学">
+                <i class="fa fa-chevron-left"></i> 邂逅心学
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
 
       
-      
-        <div class="post-eof"></div>
       
     </footer>
   </article>
 
 
-    
-  </section>
 
-  
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -757,6 +540,14 @@ ctx.refresh();
 
 
           
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/09/24/Spring-beans/"
+           data-title="Spring-beans" data-url="http://xuyajun.xyz/2016/09/24/Spring-beans/">
+      </div>
+    
+  </div>
+
 
         </div>
         
@@ -776,8 +567,17 @@ ctx.refresh();
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+      <section class="site-overview sidebar-panel ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/xyj.png"
@@ -820,6 +620,17 @@ ctx.refresh();
 
       </section>
 
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#先做点准备工作："><span class="nav-number">1.</span> <span class="nav-text">先做点准备工作：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bean"><span class="nav-number"></span> <span class="nav-text">Bean:</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#创建bean"><span class="nav-number">1.</span> <span class="nav-text">创建bean</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#定义bean"><span class="nav-number">2.</span> <span class="nav-text">定义bean</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bean的解析"><span class="nav-number">3.</span> <span class="nav-text">bean的解析</span></a></li></ol></div>
+            
+          </div>
+        </section>
       
 
     </div>
@@ -923,6 +734,10 @@ ctx.refresh();
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
 
   
 
