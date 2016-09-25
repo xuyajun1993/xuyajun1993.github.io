@@ -94,7 +94,7 @@
 <meta property="og:image" content="http://xuyajun.xyz/images/BeanFactory.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/RootBeanDefinition.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/XmlBeanDefinitionReader.png">
-<meta property="og:updated_time" content="2016-09-24T15:17:19.000Z">
+<meta property="og:updated_time" content="2016-09-25T02:29:07.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring-beans">
 <meta name="twitter:description" content="&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
@@ -446,7 +446,11 @@ ctx.refresh();
   }
 </code></pre></li>
 </ul>
-<p>可以看出，如果dom节点的名称空间是spring默认的’<a href="http://www.springframework.org/schema/beans&#39;，则直接按照默认标签解析。否则，就需要按照自定义的解析。" target="_blank" rel="external">http://www.springframework.org/schema/beans&#39;，则直接按照默认标签解析。否则，就需要按照自定义的解析。</a></p>
+<p>可以看出，如果dom节点的名称空间是spring默认的 </p>
+<blockquote>
+<p><a href="http://www.springframework.org/schema/beans" target="_blank" rel="external">http://www.springframework.org/schema/beans</a></p>
+</blockquote>
+<p>则直接按照默认标签解析。否则，就需要按照自定义的解析。</p>
 </li>
 </ol>
 <p>&nbsp; &nbsp; &nbsp; &nbsp;spring-beans模块暂时先阅读到这里，我们已经看到了核心的功能是怎么实现的。后面阅读其他模块时，还会需要回来看看的。下一个进行攻克的是spring-context模块。</p>
