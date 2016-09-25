@@ -94,7 +94,7 @@
 <meta property="og:image" content="http://xuyajun.xyz/images/BeanFactory.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/RootBeanDefinition.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/XmlBeanDefinitionReader.png">
-<meta property="og:updated_time" content="2016-09-24T15:09:35.000Z">
+<meta property="og:updated_time" content="2016-09-24T15:17:19.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring-beans">
 <meta name="twitter:description" content="&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
@@ -397,7 +397,7 @@
 </ul>
 </li>
 </ol>
-<p>&nbsp; &nbsp; &nbsp; &nbsp;问题来了,看到个不太懂得玩意，<strong>对XML文件的验证模式</strong>？看了下代码，如果XML文件中包含“DOCTYPE”，则使用DTD进行验证，否则使用XSD。DTD和XSD有啥区别呢？请移步另一片博文：<a href="">DTD</a><br>&nbsp; &nbsp; &nbsp; &nbsp;关于通过JAXP的dom接口(<em>《spring源码深度解析》里作者说是使用SAX接口来解析的，需要纠正</em>)来解析XML文档，需要了解下spring实现了ResourceEntityResolver和DelegatingEntityResolver两种EntityResolver。简单了解下<strong>EntityResolver</strong>: 解析一个XML时，需要根据开头的声明去网络下载DTD文件，对XML进行格式验证。而重写EntityResolver就可以指定去本地寻找DTD文件，避免网络操作。<br>&nbsp; &nbsp; &nbsp; &nbsp;重点放在注册bean上，由于spring很好的践行了单一职责设计模式，所以类的跳转很多。先来到DefaultBeanDefinitionDocumentReader.doRegisterBeanDefinitions:  </p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp;问题来了,看到个不太懂得玩意，<strong>对XML文件的验证模式</strong>？看了下代码，如果XML文件中包含“DOCTYPE”，则使用DTD进行验证，否则使用XSD。DTD和XSD有啥区别呢？请移步另一片博文：<a href="">XML文件的验证模式</a><br>&nbsp; &nbsp; &nbsp; &nbsp;关于通过JAXP的dom接口(<em>《spring源码深度解析》里作者说是使用SAX接口来解析的，需要纠正</em>)来解析XML文档，需要了解下spring实现了ResourceEntityResolver和DelegatingEntityResolver两种EntityResolver。简单了解下<strong>EntityResolver</strong>: 解析一个XML时，需要根据开头的声明去网络下载DTD文件，对XML进行格式验证。而重写EntityResolver就可以指定去本地寻找DTD文件，避免网络操作。<br>&nbsp; &nbsp; &nbsp; &nbsp;重点放在注册bean上，由于spring很好的践行了单一职责设计模式，所以类的跳转很多。先来到DefaultBeanDefinitionDocumentReader.doRegisterBeanDefinitions:  </p>
 <ol>
 <li><p><strong>处理“profile”属性</strong>：</p>
 <ul>
