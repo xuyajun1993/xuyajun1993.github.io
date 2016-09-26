@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.xyz/"/>
-  <updated>2016-09-25T02:29:07.000Z</updated>
+  <updated>2016-09-26T12:30:50.000Z</updated>
   <id>http://xuyajun.xyz/</id>
   
   <author>
@@ -16,98 +16,100 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>Spring-beans</title>
+    <title></title>
     <link href="http://xuyajun.xyz/2016/09/24/Spring-beans/"/>
     <id>http://xuyajun.xyz/2016/09/24/Spring-beans/</id>
     <published>2016-09-24T11:05:20.000Z</published>
-    <updated>2016-09-25T02:29:07.000Z</updated>
+    <updated>2016-09-26T12:30:50.000Z</updated>
     
-    <content type="html"><![CDATA[<p>&nbsp; &nbsp; &nbsp; &nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。<br><a id="more"></a></p>
-<h1 id="先做点准备工作："><a href="#先做点准备工作：" class="headerlink" title="先做点准备工作："></a>先做点准备工作：</h1><p>1.下载spring源码，选择的是3.2.15版本。<br>2.因为spring已经由maven转向gradle,所以需要较为深刻的了解下gradle。通过gradle查看依赖树，从整体上弄清每个模块的关系和功能。<br>3.gradle编译源码遇到问题：”A problem occurred configuring project ‘:spring-orm-hibernate4’”，通过Google，这个貌似是3.2版本和gradle版本的不兼容造成的。先不折腾，注释掉merge.into语句。<br>4.将源码文件夹改为只读，防止不小心修改<br>   <code>chmod -R 555 spring-framework-3.2.15.RELEASE</code></p>
-<h1 id="Bean"><a href="#Bean" class="headerlink" title="Bean:"></a>Bean:</h1><p>&nbsp; &nbsp; &nbsp; &nbsp;开始肯定是先找到一个切入类，我的做法是快速浏览一下项目的结构，熟悉每个package大概是什么功能。比如Spring-beans结构由annotation，factory，propertyeditors，support几个包组成，还有很多未放入包的类，不过，一看类名就知道大概是工具类和自定义的异常类。至于几个package，annotation里面定义了一些注解，propertyeditors定义了数据类型之间的转换，support提供了对bean排序等的一些支持功能，继续展开factory，终于找到一个熟悉的类XmlBeanFactory。<br>&nbsp; &nbsp; &nbsp; &nbsp;相信大家刚开始学习spring的时候肯定写过这行代码：<br><code>BeanFactory factory = new XmlBeanFactory(new ClassPathResource(&quot;applicationContext.xml&quot;));</code><br>&nbsp; &nbsp; &nbsp; &nbsp;打开发现该类已经@Deprecated，谷歌了一下，和猜想的一样，3.1版本已经被applicationcontext替换。<br><code>BeanFactory factory = new ClassPathXmlApplicationContext(&quot;applicationContext.xml&quot;);</code><br>而applicationcontext属于context模块下，但还是基于beans模块实现的。不管，先研究下XmlBeanFactory。</p>
-<h2 id="创建bean"><a href="#创建bean" class="headerlink" title="创建bean"></a>创建bean</h2><p>用idea显示出XmlBeanFactory的类图：<img src="/images/XmlBeanFactory.png" alt="alt text"></p>
-<p>ok,从BeanFactory入手，看看bean怎么被生产的，方法如图：<img src="/images/BeanFactory.png" alt="alt text">典型的工厂模式，这个就是创建bean的顶级工厂。<br>BeanFactory有三个直接子类，也都是接口，初步看了一下，对应的功能分别如下:  </p>
+    <content type="html"><![CDATA[<hr>
+<p>title： Spring-beans<br>date： 2016-09-24 19：05：20<br>categories： Spring源码</p>
+<h2 id="tags："><a href="#tags：" class="headerlink" title="tags："></a>tags：</h2><p>&emsp;&emsp;首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。<br><a id="more"></a></p>
+<h1 id="先做点准备工作："><a href="#先做点准备工作：" class="headerlink" title="先做点准备工作："></a>先做点准备工作：</h1><p>1.下载 spring 源码，选择的是 3.2.15 版本。<br>2.因为 spring 已经由 maven 转向 gradle,所以需要较为深刻的了解下 gradle。通过 gradle 查看依赖树，从整体上弄清每个模块的关系和功能。<br>3.gradle 编译源码遇到问题：”A problem occurred configuring project ‘：spring-orm-hibernate4’”，通过 Google，这个貌似是 3.2 版本和 gradle 版本的不兼容造成的。先不折腾，注释掉 merge.into 语句。<br>4.将源码文件夹改为只读，防止不小心修改。<br>   <code>chmod -R 555 spring-framework-3.2.15.RELEASE</code></p>
+<h1 id="Bean："><a href="#Bean：" class="headerlink" title="Bean："></a>Bean：</h1><p>&emsp;&emsp;开始肯定是先找到一个切入类，我的做法是快速浏览一下项目的结构，熟悉每个 package 大概是什么功能。比如 Spring-beans 结构由 annotation，factory，propertyeditors，support 几个包组成，还有很多未放入包的类，不过，一看类名就知道大概是工具类和自定义的异常类。至于几个 package，annotation 里面定义了一些注解，propertyeditors 定义了数据类型之间的转换，support 提供了对 bean 排序等的一些支持功能，继续展开 factory，终于找到一个熟悉的类 XmlBeanFactory。<br>&emsp;&emsp;相信大家刚开始学习 spring 的时候肯定写过这行代码：<br><code>BeanFactory factory = new XmlBeanFactory(new ClassPathResource(&quot;applicationContext.xml&quot;));</code><br>&emsp;&emsp;打开发现该类已经 @Deprecated，谷歌了一下，和猜想的一样，3.1 版本已经被 applicationcontext 替换。<br><code>BeanFactory factory = new ClassPathXmlApplicationContext(&quot;applicationContext.xml&quot;);</code><br>而 applicationcontext 属于 context 模块下，但还是基于 beans 模块实现的。不管，先研究下 XmlBeanFactory。</p>
+<h2 id="创建-bean"><a href="#创建-bean" class="headerlink" title="创建 bean"></a>创建 bean</h2><p>用 idea 显示出 XmlBeanFactory 的类图：<img src="/images/XmlBeanFactory.png" alt="alt text"></p>
+<p>ok,从 BeanFactory 入手，看看 bean 怎么被生产的，方法如图：<img src="/images/BeanFactory.png" alt="alt text">典型的工厂模式，这个就是创建 bean 的顶级工厂。<br>BeanFactory 有三个直接子类，也都是接口，初步看了一下，对应的功能分别如下：  </p>
 <ul>
-<li>ListableBeanFactory: 可批量创建bean，获取bean信息</li>
-<li>HierarchicalBeanFactory: 使beanfactory具有继承性</li>
-<li>AutowireCapableBeanFactory: 定义了自动装配的策略  </li>
+<li>ListableBeanFactory： 可批量创建 bean，获取 bean 信息</li>
+<li>HierarchicalBeanFactory： 使 beanfactory 具有继承性</li>
+<li>AutowireCapableBeanFactory： 定义了自动装配的策略  </li>
 </ul>
 <p>再看下类图左边的几个接口，容易理解。</p>
 <ul>
-<li>AliasRegistry: 提供了别名管理</li>
-<li>BeanDefinitionRegistry: AliasRegistry的子接口，主要用来注册bean</li>
-<li>SimpleAliasRegistry: AliasRegistry接口的简单实现类，使用key和value都是String的map对别名进行存储，删除等操作。  </li>
-<li>SingletonBeanRegistry: 另一个顶级接口,用来注册singleton的bean。</li>
+<li>AliasRegistry：提供了别名管理</li>
+<li>BeanDefinitionRegistry： AliasRegistry 的子接口，主要用来注册 bean</li>
+<li>SimpleAliasRegistry： AliasRegistry 接口的简单实现类，使用key和value都是 String 的 map 对别名进行存储，删除等操作。  </li>
+<li>SingletonBeanRegistry： 另一个顶级接口,用来注册 singleton 的 bean。</li>
 </ul>
-<p>类图中其他类都是由这几个接口衍生出来，但易看出，所有的接口最后都在DefaultListableBeanFactory类中实现。先不细看这一千多行代码，初步了解了beanfactory的继承图和功能就行。</p>
-<h2 id="定义bean"><a href="#定义bean" class="headerlink" title="定义bean"></a>定义bean</h2><p>那接下来看啥，嘿嘿，看Bean怎么被定义的。在BeanDefinitionRegistry中注册bean时，使用了BeanDefinition。<br>找到其一个子类RootBeanDefinition来看看类图：<img src="/images/RootBeanDefinition.png" alt="alt text"><br>看下各个接口的功能:</p>
+<p>类图中其他类都是由这几个接口衍生出来，但易看出，所有的接口最后都在 DefaultListableBeanFactory 类中实现。先不细看这一千多行代码，初步了解了 beanfactory 的继承图和功能就行。</p>
+<h2 id="定义-bean"><a href="#定义-bean" class="headerlink" title="定义 bean"></a>定义 bean</h2><p>那接下来看啥，看 Bean 怎么被定义的。在 BeanDefinitionRegistry 中注册 bean 时，使用了 BeanDefinition。<br>找到其一个子类 RootBeanDefinition 来看看类图：<img src="/images/RootBeanDefinition.png" alt="alt text"><br>看下各个接口的功能：</p>
 <ul>
-<li>AttributeAccessor: 定义bean的属性（字段)</li>
-<li>BeanMetadataElement: 只有一个getSource()方法，返回元数据的配置源</li>
-<li>BeanDefinition: 定义了bean的环境属性，比如single/prototype，是否懒加载</li>
-<li>AttributeAccessorSupport: 提供了AttributeAccessor接口的简易实现，存储/删除/判断bean的属性（字段）</li>
-<li>BeanMetadataAttributeAccessor: AttributeAccessorSupport类的增加版，用BeanMetadataAttribute对象代替了Object</li>
-<li>AbstractBeanDefinition:抽象类，为GenericBeanDefinition，RootBeanDefinition，ChildBeanDefinition三个子类抽象出公共的方法和属性</li>
-<li>ChildBeanDefinition: 让bean拥有继承关系，拥有父bean</li>
-<li>RootBeanDefinition: 可以看作是多个具有继承关系bean的合成体</li>
-<li>GenericBeanDefinition:2.5版本后大部分场景下用来代替ChildBeanDefinition和RootBeanDefinition，后两个类更倾向于使用在提前决定了继承关系的场景中，而GenericBeanDefinition可以动态配置继承关系</li>
+<li>AttributeAccessor： 定义 bean 的属性（字段)</li>
+<li>BeanMetadataElement： 只有一个 getSource() 方法，返回元数据的配置源</li>
+<li>BeanDefinition： 定义了 bean 的环境属性，比如 single/prototype，是否懒加载</li>
+<li>AttributeAccessorSupport： 提供了 AttributeAccessor 接口的简易实现，存储/删除/判断 bean 的属性（字段）</li>
+<li>BeanMetadataAttributeAccessor： AttributeAccessorSupport 类的增加版，用 BeanMetadataAttribute 对象代替了Object</li>
+<li>AbstractBeanDefinition：抽象类，为 GenericBeanDefinition，RootBeanDefinition，ChildBeanDefinition 三个子类抽象出公共的方法和属性</li>
+<li>ChildBeanDefinition： 让 bean 拥有继承关系，拥有父 bean</li>
+<li>RootBeanDefinition： 可以看作是多个具有继承关系 bean 的合成体</li>
+<li>GenericBeanDefinition：2.5 版本后大部分场景下用来代替 ChildBeanDefinition和RootBeanDefinition，后两个类更倾向于使用在提前决定了继承关系的场景中，而 GenericBeanDefinition 可以动态配置继承关系</li>
 </ul>
-<p>关于bean的定义大致如此，先了解到这，来看下bean的解析。</p>
-<h2 id="bean的解析"><a href="#bean的解析" class="headerlink" title="bean的解析"></a>bean的解析</h2><p>可以预见，内部的某个reader读取spring配置文件，然后解析成BeanDefinition对象。在XmlBeanFactory类中发现XmlBeanDefinitionReader，看下类图：<img src="/images/XmlBeanDefinitionReader.png" alt="alt text"></p>
+<p>关于 bean 的定义大致如此，先了解到这，来看下 bean 的解析。</p>
+<h2 id="解析-bean"><a href="#解析-bean" class="headerlink" title="解析 bean"></a>解析 bean</h2><p>可以预见，内部的某个 Reader 读取 spring 配置文件，然后解析成 BeanDefinition 对象。在 XmlBeanFactory 类中发现 XmlBeanDefinitionReader，看下类图：<img src="/images/XmlBeanDefinitionReader.png" alt="alt text"></p>
 <ul>
-<li>AbstractBeanDefinitionReader: 抽象类，实现了BeanDefinitionReader接口，为PropertiesBeanDefinitionReader和XmlBeanDefinitionReader子类抽象出公共的方法和属性*</li>
+<li>AbstractBeanDefinitionReader： 抽象类，实现了 BeanDefinitionReader 接口，为 PropertiesBeanDefinitionReader 和 XmlBeanDefinitionReader 子类抽象出公共的方法和属性</li>
 </ul>
-<p>为了更好理解这几个类，需要了解下spring中内部对资源的处理，虽然是core模块中实现的。  </p>
+<p>为了更好理解这几个类，需要了解下 spring 中内部对资源的处理，虽然是 core 模块中实现的。  </p>
 <ul>
-<li>InputStreamSource: 该接口只有一个getInputStream方法</li>
-<li>Resource: 将输入流包装成资源</li>
-<li>AbstractResource: 抽象类，继承Resource接口，进行了简单实现，不同来源的资源文件都会继承该基类进行各自的实现</li>
-<li>WritableResource: 增加资源的写操作</li>
-<li>AbstractFileResolvingResource: 将url形式的输入流转为文件引用输入流</li>
+<li>InputStreamSource： 该接口只有一个 getInputStream 方法</li>
+<li>Resource： 将输入流包装成资源</li>
+<li>AbstractResource： 抽象类，继承 Resource 接口，进行了简单实现，不同来源的资源文件都会继承该基类进行各自的实现</li>
+<li>WritableResource： 增加资源的写操作</li>
+<li>AbstractFileResolvingResource： 将 url 形式的输入流转为文件引用输入流</li>
 </ul>
-<p>搞清楚Resource后，来梳理一下bean的解析过程(XmlBeanDefinitionReader.loadBeanDefinitions):  </p>
+<p>搞清楚 Resource 后，来梳理一下 bean 的解析过程（ XmlBeanDefinitionReader.loadBeanDefinitions ）：  </p>
 <ol>
-<li><strong>封装资源</strong>:<ul>
-<li>从XmlBeanFactory中传到XmlBeanDefinitionReader类中的是Resource对象，先封装为EncodedResource，指定编码</li>
+<li><strong>封装资源</strong>：<ul>
+<li>从 XmlBeanFactory 中传到 XmlBeanDefinitionReader 类中的是 Resource 对象，先封装为 EncodedResource，指定编码</li>
 </ul>
 </li>
-<li><strong>数据检验和准备</strong>:<ul>
-<li>使用了一个ThreadLocal保存EncodedResource，如果重复读取某个xml配置文件，会报错</li>
-<li>从EncodedResource获取输入流，构建成org.xml.sax.InputSource</li>
+<li><strong>数据检验和准备</strong>：<ul>
+<li>使用了一个 ThreadLocal 保存 EncodedResource，如果重复读取某个 xml 配置文件，会报错</li>
+<li>从 EncodedResource 获取输入流，构建成 org.xml.sax.InputSource</li>
 </ul>
 </li>
-<li><strong>真正解析xml</strong>:<ul>
-<li>获取对XML文件的验证模式</li>
-<li>使用DefaultDocumentLoader加载XML文件，得到org.w3c.dom.Document对象。</li>
-<li>根据Document对象和资源注册bean  </li>
+<li><strong>真正解析 xml</strong>：<ul>
+<li>获取对 XML 文件的验证模式</li>
+<li>使用 DefaultDocumentLoader加载 XML 文件，得到 org.w3c.dom.Document 对象。</li>
+<li>根据 Document 对象和资源注册 bean  </li>
 </ul>
 </li>
 </ol>
-<p>&nbsp; &nbsp; &nbsp; &nbsp;问题来了,看到个不太懂得玩意，<strong>对XML文件的验证模式</strong>？看了下代码，如果XML文件中包含“DOCTYPE”，则使用DTD进行验证，否则使用XSD。DTD和XSD有啥区别呢？请移步另一片博文：<a href="">XML文件的验证模式</a><br>&nbsp; &nbsp; &nbsp; &nbsp;关于通过JAXP的dom接口(<em>《spring源码深度解析》里作者说是使用SAX接口来解析的，需要纠正</em>)来解析XML文档，需要了解下spring实现了ResourceEntityResolver和DelegatingEntityResolver两种EntityResolver。简单了解下<strong>EntityResolver</strong>: 解析一个XML时，需要根据开头的声明去网络下载DTD文件，对XML进行格式验证。而重写EntityResolver就可以指定去本地寻找DTD文件，避免网络操作。<br>&nbsp; &nbsp; &nbsp; &nbsp;重点放在注册bean上，由于spring很好的践行了单一职责设计模式，所以类的跳转很多。先来到DefaultBeanDefinitionDocumentReader.doRegisterBeanDefinitions:  </p>
+<p>&emsp;&emsp;问题来了,看到个不太懂得玩意，<strong>对 XML 文件的验证模式</strong>？看了下代码，如果 XML 文件中包含“ DOCTYPE ”，则使用 DTD 进行验证，否则使用 XSD。DTD 和 XSD 有啥区别呢？请移步另一片博文：<a href=""> XML 文件的验证模式</a><br>&emsp;&emsp;关于通过 JAXP 的 dom 接口(<em>《 spring 源码深度解析》里作者说是使用 SAX 接口来解析的，需要纠正</em>)来解析 XML 文档，需要了解下 spring 实现了 ResourceEntityResolver 和 DelegatingEntityResolver 两种 EntityResolver。简单了解下 <strong>EntityResolver</strong>： 解析一个 XML 时，需要根据开头的声明去网络下载 DTD 文件，对 XML 进行格式验证。而重写 EntityResolver 就可以指定去本地寻找 DTD 文件，避免网络操作。<br>&emsp;&emsp;重点放在注册 bean 上，由于 spring 很好的践行了单一职责设计模式，所以类的跳转很多。先来到 DefaultBeanDefinitionDocumentReader.doRegisterBeanDefinitions：  </p>
 <ol>
-<li><p><strong>处理“profile”属性</strong>：</p>
+<li><p><strong>处理“ profile ”属性</strong>：</p>
 <ul>
-<li><p>关于profile属性，官方给出的例子如下：  </p>
+<li><p>关于 profile 属性，官方给出的例子如下：  </p>
 <pre><code>&lt;beans profile=&quot;dev&quot;&gt;
-    &lt;jdbc:embedded-database id=&quot;dataSource&quot;&gt;
-        &lt;jdbc:script location=&quot;classpath:com/bank/config/sql/schema.sql&quot;/&gt;
-        &lt;jdbc:script location=&quot;classpath:com/bank/config/sql/test-data.sql&quot;/&gt;
-    &lt;/jdbc:embedded-database&gt;
+    &lt;jdbc：embedded-database id=&quot;dataSource&quot;&gt;
+        &lt;jdbc：script location=&quot;classpath：com/bank/config/sql/schema.sql&quot;/&gt;
+        &lt;jdbc：script location=&quot;classpath：com/bank/config/sql/test-data.sql&quot;/&gt;
+    &lt;/jdbc：embedded-database&gt;
 &lt;/beans&gt;
 
 &lt;beans profile=&quot;production&quot;&gt;
-    &lt;jee:jndi-lookup id=&quot;dataSource&quot; jndi-name=&quot;java:comp/env/jdbc/datasource&quot;/&gt;
+    &lt;jee：jndi-lookup id=&quot;dataSource&quot; jndi-name=&quot;java：comp/env/jdbc/datasource&quot;/&gt;
 &lt;/beans&gt;    
-</code></pre><p>如果项目中使用dev环境下的数据源，则</p>
+</code></pre><p>如果项目中使用 dev 环境下的数据源，则</p>
 <pre><code>AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
 ctx.getEnvironment().setActiveProfiles(&quot;dev&quot;);
 ctx.register(SomeConfig.class, StandaloneDataConfig.class, JndiDataConfig.class);
 ctx.refresh();
-</code></pre><p>所以如果配置了profile属性，则需要检验环境变量中的profile是否在配置中定义了，如果没有，则不进行下面的解析。</p>
+</code></pre><p>所以如果配置了 profile 属性，则需要检验环境变量中的 profile 是否在配置中定义了，如果没有，则不进行下面的解析。</p>
 </li>
 </ul>
 </li>
-<li><p><strong>委托BeanDefinitionParserDelegate解析</strong>  </p>
+<li><p><strong>委托 BeanDefinitionParserDelegate 解析</strong>  </p>
 <ul>
 <li><p>核心代码：</p>
 <pre><code>protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate delegate) {
@@ -132,25 +134,25 @@ ctx.refresh();
   }
 </code></pre></li>
 </ul>
-<p>可以看出，如果dom节点的名称空间是spring默认的 </p>
+<p>可以看出，如果 dom 节点的名称空间是 spring 默认的 </p>
 <blockquote>
-<p><a href="http://www.springframework.org/schema/beans" target="_blank" rel="external">http://www.springframework.org/schema/beans</a></p>
+<p>http：//www.springframework.org/schema/beans</p>
 </blockquote>
 <p>则直接按照默认标签解析。否则，就需要按照自定义的解析。</p>
 </li>
 </ol>
-<p>&nbsp; &nbsp; &nbsp; &nbsp;spring-beans模块暂时先阅读到这里，我们已经看到了核心的功能是怎么实现的。后面阅读其他模块时，还会需要回来看看的。下一个进行攻克的是spring-context模块。</p>
+<p>&emsp;&emsp;spring-beans 模块暂时先阅读到这里，我们已经看到了核心的功能是怎么实现的。后面阅读其他模块时，还会需要回来看看的。下一个进行攻克的是 spring-context 模块。</p>
 <hr>
-<p>&nbsp; &nbsp; &nbsp; &nbsp;对于怎么去高效的阅读源码，我仍处于摸索当中。怎么用博客去更好的记录和表达我的阅读成果，对我也是个挑战。相信在时间的积淀下，我会找到读源码的正确姿势，同时，我也将慢慢进行改进，在博客中加入时序图等更加直观的方式来表达。👊</p>
+<p>&emsp;&emsp;对于怎么去高效的阅读源码，我仍处于摸索当中。怎么用博客去更好的记录和表达我的阅读成果，对我也是个挑战。相信在时间的积淀下，我会找到读源码的正确姿势，同时，我也将慢慢进行改进，在博客中加入时序图等更加直观的方式。👊</p>
 ]]></content>
     
     <summary type="html">
     
-      &lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;首先感谢《spring源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。&lt;br&gt;
+      &lt;hr&gt;
+&lt;p&gt;title： Spring-beans&lt;br&gt;date： 2016-09-24 19：05：20&lt;br&gt;categories： Spring源码&lt;/p&gt;
+&lt;h2 id=&quot;tags：&quot;&gt;&lt;a href=&quot;#tags：&quot; class=&quot;headerlink&quot; title=&quot;tags：&quot;&gt;&lt;/a&gt;tags：&lt;/h2&gt;&lt;p&gt;&amp;emsp;&amp;emsp;首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。&lt;br&gt;
     
     </summary>
-    
-      <category term="Spring源码" scheme="http://xuyajun.xyz/categories/Spring%E6%BA%90%E7%A0%81/"/>
     
     
   </entry>
@@ -160,14 +162,14 @@ ctx.refresh();
     <link href="http://xuyajun.xyz/2016/08/31/%E9%82%82%E9%80%85%E5%BF%83%E5%AD%A6/"/>
     <id>http://xuyajun.xyz/2016/08/31/邂逅心学/</id>
     <published>2016-08-31T11:23:12.000Z</published>
-    <updated>2016-09-22T13:38:40.000Z</updated>
+    <updated>2016-09-26T12:15:25.000Z</updated>
     
-    <content type="html"><![CDATA[<p>&nbsp; &nbsp; &nbsp; &nbsp;从来没有想过自己会有这么喜欢哲学的一天，而开启我的哲学学习之旅的是课本中曾一带而过的阳明心学。<br>&nbsp; &nbsp; &nbsp; &nbsp;记不清具体哪天又重新认识了心学。去年的实习时期，15年的10月份左右。当时我在杭州网易实习，租着一间独卫单间，12平米，和女友异地。那段时间学习欲望很强，激情很高。除了像往常一样的钻研技术，也会强迫自己去健身房健身。可能是因为从高中开始就没有读过文学书，看到办公室外的书架上摆着世界名著，我很欣喜的挑了几本回去看。<a id="more"></a>到11月份的时候，我看完了&lt;&lt;傲慢与偏见&gt;&gt;和&lt;&lt;基督山伯爵&gt;&gt;两本书，对&lt;&lt;基督山伯爵&gt;&gt;尤为爱不释手，“等待与希望”五个字让我感触颇深。<br>&nbsp; &nbsp; &nbsp; &nbsp;但是，总感觉内心少了什么，依旧浮躁，会周期性的和女友发脾气。文学的熏陶能让我心宁平静几天，但很快就散了，难道需要一直用文学作品的力量来维持？可是，又哪来这么多像&lt;&lt;基督山伯爵&gt;&gt;这样优秀的作品呢。<br>&nbsp; &nbsp; &nbsp; &nbsp;我开始明白，我此时缺少的是信仰。心学就这样在我需要信仰的时候走进了我的生活。很快，不满足于看粗略介绍阳明先生和心学的我开始抱着好奇直接阅读心学著作&lt;&lt;传习录&gt;&gt;。一开始，看着通篇的文言文，产生过退缩念头，想直接读白话版的。但是，一想到只有看原著，才能理解其原汁原味的思想和哲学，我坚持了下来。还好，不是想象中的那么晦涩难懂。刚好临近双11，在双11那天，我在淘宝上买了本&lt;&lt;王阳明最神奇的心学&gt;&gt;。此时，对心学并不算热忱，只是了解阶段。<br>&nbsp; &nbsp; &nbsp; &nbsp;到了11月中旬，实习离职回到了学校。转正没有成功，让我很是受打击和郁闷。一直自信的我只能感叹自己还有很多问题，不仅是技术，更是社会经验。回到学校，本以为和女友重逢能让我稍微缓解一下郁闷。但没想到很快就分手了（过程略过zzz），此时的我，感觉到了这么多年最大的挫败感。失业失恋，身边的朋友都还在外面实习，我一个人郁闷到了极点。每天在宿舍无法宣泄，内心痛苦，深夜更是无法入眠。<br>&nbsp; &nbsp; &nbsp; &nbsp;终于，我想起了数日没有学习了的心学。开始渴望从中寻求人生幸福真理的我比之前更加认真的学习&lt;&lt;传习录&gt;&gt;，每天晚上也只有听着喜马拉雅的”知行合一王阳明“才能入睡。慢慢的，内心开始变得平静，想到阳明先生在龙场那么恶劣的环境，实现了突破，留下了龙场悟道的佳话，越发觉得自己目前的困境根本不值一提。经常有人说，我们知道那么多道理，为什么还不能活的好。但你真的懂得那些道理吗，只能算是听过吧。知行合一，我们都知道消极不能解决问题，要积极向上，可是当我们遇到事情的时候，还是任由自己消极，这算是知道这个道理吗？不能去做的道理都不能算是知。<br>&nbsp; &nbsp; &nbsp; &nbsp;时光荏苒，已经是16年的九月份了，这大半年来，虽没有参悟完全心学，但是，已经足够让我内心平静。找到份满意的工作，把女友追回，爱上了哲学。</p>
+    <content type="html"><![CDATA[<p>&emsp;&emsp;从来没有想过自己会有这么喜欢哲学的一天，而开启我的哲学学习之旅的是课本中曾一带而过的阳明心学。<br>&emsp;&emsp;记不清具体哪天又重新认识了心学。去年的实习时期，15年的10月份左右。当时我在杭州网易实习，租着一间独卫单间，12平米，和女友异地。那段时间学习欲望很强，激情很高。除了像往常一样的钻研技术，也会强迫自己去健身房健身。可能是因为从高中开始就没有读过文学书，看到办公室外的书架上摆着世界名著，我很欣喜的挑了几本回去看。<a id="more"></a>到11月份的时候，我看完了&lt;&lt;傲慢与偏见&gt;&gt;和&lt;&lt;基督山伯爵&gt;&gt;两本书，对&lt;&lt;基督山伯爵&gt;&gt;尤为爱不释手，“等待与希望”五个字让我感触颇深。<br>&emsp;&emsp;但是，总感觉内心少了什么，依旧浮躁，会周期性的和女友发脾气。文学的熏陶能让我心宁平静几天，但很快就散了，难道需要一直用文学作品的力量来维持？可是，又哪来这么多像&lt;&lt;基督山伯爵&gt;&gt;这样优秀的作品呢。<br>&emsp;&emsp;我开始明白，我此时缺少的是信仰。心学就这样在我需要信仰的时候走进了我的生活。很快，不满足于看粗略介绍阳明先生和心学的我开始抱着好奇直接阅读心学著作&lt;&lt;传习录&gt;&gt;。一开始，看着通篇的文言文，产生过退缩念头，想直接读白话版的。但是，一想到只有看原著，才能理解其原汁原味的思想和哲学，我坚持了下来。还好，不是想象中的那么晦涩难懂。刚好临近双11，在双11那天，我在淘宝上买了本&lt;&lt;王阳明最神奇的心学&gt;&gt;。此时，对心学并不算热忱，只是了解阶段。<br>&emsp;&emsp;到了11月中旬，实习离职回到了学校。转正没有成功，让我很是受打击和郁闷。一直自信的我只能感叹自己还有很多问题，不仅是技术，更是社会经验。回到学校，本以为和女友重逢能让我稍微缓解一下郁闷。但没想到很快就分手了（过程略过zzz），此时的我，感觉到了这么多年最大的挫败感。失业失恋，身边的朋友都还在外面实习，我一个人郁闷到了极点。每天在宿舍无法宣泄，内心痛苦，深夜更是无法入眠。<br>&emsp;&emsp;终于，我想起了数日没有学习了的心学。开始渴望从中寻求人生幸福真理的我比之前更加认真的学习&lt;&lt;传习录&gt;&gt;，每天晚上也只有听着喜马拉雅的”知行合一王阳明“才能入睡。慢慢的，内心开始变得平静，想到阳明先生在龙场那么恶劣的环境，实现了突破，留下了龙场悟道的佳话，越发觉得自己目前的困境根本不值一提。经常有人说，我们知道那么多道理，为什么还不能活的好。但你真的懂得那些道理吗，只能算是听过吧。知行合一，我们都知道消极不能解决问题，要积极向上，可是当我们遇到事情的时候，还是任由自己消极，这算是知道这个道理吗？不能去做的道理都不能算是知。<br>&emsp;&emsp;时光荏苒，已经是16年的九月份了，这大半年来，虽没有参悟完全心学，但是，已经足够让我内心平静。找到份满意的工作，把女友追回，爱上了哲学。</p>
 ]]></content>
     
     <summary type="html">
     
-      &lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;从来没有想过自己会有这么喜欢哲学的一天，而开启我的哲学学习之旅的是课本中曾一带而过的阳明心学。&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;记不清具体哪天又重新认识了心学。去年的实习时期，15年的10月份左右。当时我在杭州网易实习，租着一间独卫单间，12平米，和女友异地。那段时间学习欲望很强，激情很高。除了像往常一样的钻研技术，也会强迫自己去健身房健身。可能是因为从高中开始就没有读过文学书，看到办公室外的书架上摆着世界名著，我很欣喜的挑了几本回去看。
+      &lt;p&gt;&amp;emsp;&amp;emsp;从来没有想过自己会有这么喜欢哲学的一天，而开启我的哲学学习之旅的是课本中曾一带而过的阳明心学。&lt;br&gt;&amp;emsp;&amp;emsp;记不清具体哪天又重新认识了心学。去年的实习时期，15年的10月份左右。当时我在杭州网易实习，租着一间独卫单间，12平米，和女友异地。那段时间学习欲望很强，激情很高。除了像往常一样的钻研技术，也会强迫自己去健身房健身。可能是因为从高中开始就没有读过文学书，看到办公室外的书架上摆着世界名著，我很欣喜的挑了几本回去看。
     
     </summary>
     
@@ -181,22 +183,22 @@ ctx.refresh();
     <link href="http://xuyajun.xyz/2016/08/28/%E5%85%B3%E4%BA%8E%E5%86%99%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%BF%83%E8%B7%AF%E5%8E%86%E7%A8%8B/"/>
     <id>http://xuyajun.xyz/2016/08/28/关于写博客的心路历程/</id>
     <published>2016-08-28T14:23:12.000Z</published>
-    <updated>2016-09-24T07:04:21.000Z</updated>
+    <updated>2016-09-26T12:15:11.000Z</updated>
     
-    <content type="html"><![CDATA[<h2 id="取个题目都好难"><a href="#取个题目都好难" class="headerlink" title="取个题目都好难"></a>取个题目都好难</h2><p>&nbsp; &nbsp; &nbsp; &nbsp;许久没写字，当手放在键盘上，不是为了敲代码，聊天，而是为了写文章，却发现码字速率骤降，几分钟憋不出一句话。就拿这篇博客题目来说，我想扯下自己写博客的思想斗争，于是很自然的写上“关于写博客的心历路程”这个题目，但是写完之后总感觉怪怪的，心历路程？是这个词语吗？于是又很自然的搜索了一把，果然，应该是“心路历程”。😓</p>
+    <content type="html"><![CDATA[<h2 id="取个题目都好难"><a href="#取个题目都好难" class="headerlink" title="取个题目都好难"></a>取个题目都好难</h2><p>&emsp;&emsp;许久没写字，当手放在键盘上，不是为了敲代码，聊天，而是为了写文章，却发现码字速率骤降，几分钟憋不出一句话。就拿这篇博客题目来说，我想扯下自己写博客的思想斗争，于是很自然的写上“关于写博客的心历路程”这个题目，但是写完之后总感觉怪怪的，心历路程？是这个词语吗？于是又很自然的搜索了一把，果然，应该是“心路历程”。😓</p>
 <h2 id="为嘛写博客"><a href="#为嘛写博客" class="headerlink" title="为嘛写博客"></a>为嘛写博客</h2><a id="more"></a>
-<h3 id="文笔"><a href="#文笔" class="headerlink" title="文笔"></a>文笔</h3><p>&nbsp; &nbsp; &nbsp; &nbsp;虽然爱看书和文笔好没有也不需要有必然的关系，但是当你看到文字的力量后，你不想掌握这种力量吗？</p>
-<h3 id="回忆"><a href="#回忆" class="headerlink" title="回忆"></a>回忆</h3><p>&nbsp; &nbsp; &nbsp; &nbsp;你说你热爱技术，喜欢看哲学家吵架，但是好记性不如烂笔头。你连为它敲敲键盘都不愿意，凭什么说爱它？所以，年轻人，留下点以后能让自己和他人回忆的东西吧。</p>
-<h3 id="打赏"><a href="#打赏" class="headerlink" title="打赏"></a>打赏</h3><p>&nbsp; &nbsp; &nbsp; &nbsp;上面都是自己找的精神层面的忽悠理由，但是感觉仍少了什么。我虽推崇当代人去追求精神建设，但是那是因为当代人已经过多的追求物质了。所以，物质也是必不可少。为了进一步忽悠自己，给博客开通了打赏功能，强行鼓励自己“只要博客写得好，就会成为Slash青年”。</p>
-<h2 id="博客规划"><a href="#博客规划" class="headerlink" title="博客规划"></a>博客规划</h2><h3 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h3><p>&nbsp; &nbsp; &nbsp; &nbsp;技术毕竟是老本行，很庆幸自己能从事自己最感兴趣的职业。为了让自己时刻保持竞争力，将对当下最火的开源项目进行源码分析，学习其设计思想和编码风格。提上分析日程的项目是：spring,kafka,diamond。之前已经或多或少的看过其源码，但没有从系统架构层面上去欣赏。希望自己能坚持，不求写出最有深度的源码分析，但愿能超越自己。</p>
-<h3 id="哲学"><a href="#哲学" class="headerlink" title="哲学"></a>哲学</h3><p>&nbsp; &nbsp; &nbsp; &nbsp;哲学家大多需要满足两个条件，一个是钱多，不必为生计烦恼，闲的蛋疼，另一个是智商高，思考普通的问题没法满足自己，就整天折腾那些形而上学的问题。当然，我一个条件都沾不上边，但并不妨碍我看热闹啊，哲学家之间的唇枪舌剑还是挺有意思。虽然看起来对工作，对物质提升没有任何作用，但是你敢说自己没有在夜晚或是看着星空，或是在黑暗中问自己“人活着是为了什么”这种问题？我不提倡也不希望自己过度迷恋某种信仰，变成某个宗教的信徒，但是如果选择某种哲学思想，赋予时代意义，作为自己的人生哲学，找到自己的人生意义，那必然是受益终生。因此，我将在自己的业余时间尽最大能力对中西方的著名哲学家的思想进行整理。当然，毕竟业余，还是那句话，超越自己！</p>
-<h3 id="读书笔记"><a href="#读书笔记" class="headerlink" title="读书笔记"></a>读书笔记</h3><p>&nbsp; &nbsp; &nbsp; &nbsp;很庆幸滨江图书馆就在身边，技术，哲学，经济，国学等应有尽有。每个周末总会抽一天来这里度过，忘却繁华，品味书香。读技术书，提升专业技能；读哲学，健全人生价值观；读经济学，洞察时下社会；读国学，传承五千年文化。读过的每本书可能无法写出深刻体会或加以拓展，但随着不断借助巨人的肩膀，必然能看到高处不同的风景并留下自己的脚印。</p>
-<h3 id="扯淡"><a href="#扯淡" class="headerlink" title="扯淡"></a>扯淡</h3><p>&nbsp; &nbsp; &nbsp; &nbsp;我不想把这个小站定位成技术博客站，我希望把它打理成像自己的内心世界一样丰富多彩。这也是我坚持写字的最大动力。人是最魔性的动物，一想到每个人都有其自己的故事和独特思想，就觉得很有趣不是吗。总之，无论是吐槽，还是一时兴起，只要有意义，我都会写下来。</p>
+<h3 id="文笔"><a href="#文笔" class="headerlink" title="文笔"></a>文笔</h3><p>&emsp;&emsp;虽然爱看书和文笔好没有也不需要有必然的关系，但是当你看到文字的力量后，你不想掌握这种力量吗？</p>
+<h3 id="回忆"><a href="#回忆" class="headerlink" title="回忆"></a>回忆</h3><p>&emsp;&emsp;你说你热爱技术，喜欢看哲学家吵架，但是好记性不如烂笔头。你连为它敲敲键盘都不愿意，凭什么说爱它？所以，年轻人，留下点以后能让自己和他人回忆的东西吧。</p>
+<h3 id="打赏"><a href="#打赏" class="headerlink" title="打赏"></a>打赏</h3><p>&emsp;&emsp;上面都是自己找的精神层面的忽悠理由，但是感觉仍少了什么。我虽推崇当代人去追求精神建设，但是那是因为当代人已经过多的追求物质了。所以，物质也是必不可少。为了进一步忽悠自己，给博客开通了打赏功能，强行鼓励自己“只要博客写得好，就会成为Slash青年”。</p>
+<h2 id="博客规划"><a href="#博客规划" class="headerlink" title="博客规划"></a>博客规划</h2><h3 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h3><p>&emsp;&emsp;技术毕竟是老本行，很庆幸自己能从事自己最感兴趣的职业。为了让自己时刻保持竞争力，将对当下最火的开源项目进行源码分析，学习其设计思想和编码风格。提上分析日程的项目是：spring,kafka,diamond。之前已经或多或少的看过其源码，但没有从系统架构层面上去欣赏。希望自己能坚持，不求写出最有深度的源码分析，但愿能超越自己。</p>
+<h3 id="哲学"><a href="#哲学" class="headerlink" title="哲学"></a>哲学</h3><p>&emsp;&emsp;哲学家大多需要满足两个条件，一个是钱多，不必为生计烦恼，闲的蛋疼，另一个是智商高，思考普通的问题没法满足自己，就整天折腾那些形而上学的问题。当然，我一个条件都沾不上边，但并不妨碍我看热闹啊，哲学家之间的唇枪舌剑还是挺有意思。虽然看起来对工作，对物质提升没有任何作用，但是你敢说自己没有在夜晚或是看着星空，或是在黑暗中问自己“人活着是为了什么”这种问题？我不提倡也不希望自己过度迷恋某种信仰，变成某个宗教的信徒，但是如果选择某种哲学思想，赋予时代意义，作为自己的人生哲学，找到自己的人生意义，那必然是受益终生。因此，我将在自己的业余时间尽最大能力对中西方的著名哲学家的思想进行整理。当然，毕竟业余，还是那句话，超越自己！</p>
+<h3 id="读书笔记"><a href="#读书笔记" class="headerlink" title="读书笔记"></a>读书笔记</h3><p>&emsp;&emsp;很庆幸滨江图书馆就在身边，技术，哲学，经济，国学等应有尽有。每个周末总会抽一天来这里度过，忘却繁华，品味书香。读技术书，提升专业技能；读哲学，健全人生价值观；读经济学，洞察时下社会；读国学，传承五千年文化。读过的每本书可能无法写出深刻体会或加以拓展，但随着不断借助巨人的肩膀，必然能看到高处不同的风景并留下自己的脚印。</p>
+<h3 id="扯淡"><a href="#扯淡" class="headerlink" title="扯淡"></a>扯淡</h3><p>&emsp;&emsp;我不想把这个小站定位成技术博客站，我希望把它打理成像自己的内心世界一样丰富多彩。这也是我坚持写字的最大动力。人是最魔性的动物，一想到每个人都有其自己的故事和独特思想，就觉得很有趣不是吗。总之，无论是吐槽，还是一时兴起，只要有意义，我都会写下来。</p>
 ]]></content>
     
     <summary type="html">
     
-      &lt;h2 id=&quot;取个题目都好难&quot;&gt;&lt;a href=&quot;#取个题目都好难&quot; class=&quot;headerlink&quot; title=&quot;取个题目都好难&quot;&gt;&lt;/a&gt;取个题目都好难&lt;/h2&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;许久没写字，当手放在键盘上，不是为了敲代码，聊天，而是为了写文章，却发现码字速率骤降，几分钟憋不出一句话。就拿这篇博客题目来说，我想扯下自己写博客的思想斗争，于是很自然的写上“关于写博客的心历路程”这个题目，但是写完之后总感觉怪怪的，心历路程？是这个词语吗？于是又很自然的搜索了一把，果然，应该是“心路历程”。😓&lt;/p&gt;
+      &lt;h2 id=&quot;取个题目都好难&quot;&gt;&lt;a href=&quot;#取个题目都好难&quot; class=&quot;headerlink&quot; title=&quot;取个题目都好难&quot;&gt;&lt;/a&gt;取个题目都好难&lt;/h2&gt;&lt;p&gt;&amp;emsp;&amp;emsp;许久没写字，当手放在键盘上，不是为了敲代码，聊天，而是为了写文章，却发现码字速率骤降，几分钟憋不出一句话。就拿这篇博客题目来说，我想扯下自己写博客的思想斗争，于是很自然的写上“关于写博客的心历路程”这个题目，但是写完之后总感觉怪怪的，心历路程？是这个词语吗？于是又很自然的搜索了一把，果然，应该是“心路历程”。😓&lt;/p&gt;
 &lt;h2 id=&quot;为嘛写博客&quot;&gt;&lt;a href=&quot;#为嘛写博客&quot; class=&quot;headerlink&quot; title=&quot;为嘛写博客&quot;&gt;&lt;/a&gt;为嘛写博客&lt;/h2&gt;
     
     </summary>
