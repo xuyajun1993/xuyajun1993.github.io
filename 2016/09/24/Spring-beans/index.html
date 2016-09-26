@@ -88,7 +88,7 @@
 
 <meta name="description" content="&amp;emsp;&amp;emsp;首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Spring-beans">
+<meta property="og:title" content="Spring-beans（一）">
 <meta property="og:url" content="http://xuyajun.xyz/2016/09/24/Spring-beans/index.html">
 <meta property="og:site_name" content="西西弗的神话">
 <meta property="og:description" content="&amp;emsp;&amp;emsp;首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
@@ -96,9 +96,9 @@
 <meta property="og:image" content="http://xuyajun.xyz/images/BeanFactory.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/RootBeanDefinition.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/XmlBeanDefinitionReader.png">
-<meta property="og:updated_time" content="2016-09-26T12:37:09.000Z">
+<meta property="og:updated_time" content="2016-09-26T14:10:05.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Spring-beans">
+<meta name="twitter:title" content="Spring-beans（一）">
 <meta name="twitter:description" content="&amp;emsp;&amp;emsp;首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
 <meta name="twitter:image" content="http://xuyajun.xyz/images/XmlBeanFactory.png">
 
@@ -123,7 +123,7 @@
 
   <link rel="canonical" href="http://xuyajun.xyz/2016/09/24/Spring-beans/"/>
 
-  <title> Spring-beans | 西西弗的神话 </title>
+  <title> Spring-beans（一） | 西西弗的神话 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -263,7 +263,7 @@
             
             
               
-                Spring-beans
+                Spring-beans（一）
               
             
           </h1>
@@ -316,7 +316,7 @@
 
           
           
-             <span id="/2016/09/24/Spring-beans/" class="leancloud_visitors" data-flag-title="Spring-beans">
+             <span id="/2016/09/24/Spring-beans/" class="leancloud_visitors" data-flag-title="Spring-beans（一）">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -399,7 +399,16 @@
 </ul>
 </li>
 </ol>
-<p>&emsp;&emsp;问题来了,看到个不太懂得玩意，<strong>对 XML 文件的验证模式</strong>？看了下代码，如果 XML 文件中包含“ DOCTYPE ”，则使用 DTD 进行验证，否则使用 XSD。DTD 和 XSD 有啥区别呢？请移步另一片博文：<a href=""> XML 文件的验证模式</a><br>&emsp;&emsp;关于通过 JAXP 的 dom 接口(<em>《 spring 源码深度解析》里作者说是使用 SAX 接口来解析的，需要纠正</em>)来解析 XML 文档，需要了解下 spring 实现了 ResourceEntityResolver 和 DelegatingEntityResolver 两种 EntityResolver。简单了解下 <strong>EntityResolver</strong>： 解析一个 XML 时，需要根据开头的声明去网络下载 DTD 文件，对 XML 进行格式验证。而重写 EntityResolver 就可以指定去本地寻找 DTD 文件，避免网络操作。<br>&emsp;&emsp;重点放在注册 bean 上，由于 spring 很好的践行了单一职责设计模式，所以类的跳转很多。先来到 DefaultBeanDefinitionDocumentReader.doRegisterBeanDefinitions：  </p>
+<p>&emsp;&emsp;问题来了,看到个不太懂得玩意，<strong>对 XML 文件的验证模式</strong>？看了下代码，如果 XML 文件中包含“ DOCTYPE ”，则使用 DTD 进行验证，否则使用 XSD。DTD 和 XSD 有啥区别呢？简单了解下：</p>
+<blockquote>
+<p>DTD 和 XSD 是对 XML 文件两种不同的约束方式。Spring 在 2.0 版本后开始引入 XSD，相比 DTD，XSD 本身就是 XML 文件，能被解析和处理，具有支持名称空间，扩展性强等优点，是 DTD 的替代者。Spring 中如果使用 DTD 进行验证 XML，则必须声明：<br><code>&lt;!DOCTYPE beans PUBLIC &quot;-//SPRING//DTD BEAN 2.0//EN&quot;
+            &quot;http://www.springframework.org/dtd/spring-beans-2.0.dtd&quot;&gt;</code></p>
+</blockquote>
+<p>&emsp;&emsp;关于通过 JAXP 的 dom 接口(<em>《 spring 源码深度解析》里作者说是使用 SAX 接口来解析的，需要纠正</em>)来解析 XML 文档，需要了解下 spring 实现了 ResourceEntityResolver 和 DelegatingEntityResolver 两种 EntityResolver。简单了解下 <strong>EntityResolver</strong>： </p>
+<blockquote>
+<p>解析一个 XML 时，需要根据开头的声明去网络下载 DTD 文件，对 XML 进行格式验证。而重写 EntityResolver 就可以指定去本地寻找 DTD 文件，避免网络操作。  </p>
+</blockquote>
+<p>&emsp;&emsp;重点放在注册 bean 上，由于 spring 很好的践行了单一职责设计模式，所以类的跳转很多。先来到 DefaultBeanDefinitionDocumentReader.doRegisterBeanDefinitions：  </p>
 <ol>
 <li><p><strong>处理“ profile ”属性</strong>：</p>
 <ul>
@@ -455,7 +464,7 @@ ctx.refresh();
 <p>则直接按照默认标签解析。否则，就需要按照自定义的解析。</p>
 </li>
 </ol>
-<p>&emsp;&emsp;spring-beans 模块暂时先阅读到这里，我们已经看到了核心的功能是怎么实现的。后面阅读其他模块时，还会需要回来看看的。下一个进行攻克的是 spring-context 模块。</p>
+<p>&emsp;&emsp;关于 bean 暂时先阅读到这里，我们已经看到了核心的功能是怎么实现的。下一篇来学习下 Spring-beans 模块中的注解功能。</p>
 <hr>
 <p>&emsp;&emsp;对于怎么去高效的阅读源码，我仍处于摸索当中。怎么用博客去更好的记录和表达我的阅读成果，对我也是个挑战。相信在时间的积淀下，我会找到读源码的正确姿势，同时，我也将慢慢进行改进，在博客中加入时序图等更加直观的方式。👊</p>
 
@@ -537,7 +546,7 @@ ctx.refresh();
   <div class="comments" id="comments">
     
       <div class="ds-thread" data-thread-key="2016/09/24/Spring-beans/"
-           data-title="Spring-beans" data-url="http://xuyajun.xyz/2016/09/24/Spring-beans/">
+           data-title="Spring-beans（一）" data-url="http://xuyajun.xyz/2016/09/24/Spring-beans/">
       </div>
     
   </div>

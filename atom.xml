@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.xyz/"/>
-  <updated>2016-09-26T12:37:09.000Z</updated>
+  <updated>2016-09-26T14:10:05.000Z</updated>
   <id>http://xuyajun.xyz/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>Spring-beans</title>
+    <title>Spring-beans（一）</title>
     <link href="http://xuyajun.xyz/2016/09/24/Spring-beans/"/>
     <id>http://xuyajun.xyz/2016/09/24/Spring-beans/</id>
     <published>2016-09-24T11:05:20.000Z</published>
-    <updated>2016-09-26T12:37:09.000Z</updated>
+    <updated>2016-09-26T14:10:05.000Z</updated>
     
     <content type="html"><![CDATA[<p>&emsp;&emsp;首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。<br><a id="more"></a></p>
 <h1 id="先做点准备工作："><a href="#先做点准备工作：" class="headerlink" title="先做点准备工作："></a>先做点准备工作：</h1><p>1.下载 spring 源码，选择的是 3.2.15 版本。<br>2.因为 spring 已经由 maven 转向 gradle,所以需要较为深刻的了解下 gradle。通过 gradle 查看依赖树，从整体上弄清每个模块的关系和功能。<br>3.gradle 编译源码遇到问题：”A problem occurred configuring project ‘：spring-orm-hibernate4’”，通过 Google，这个貌似是 3.2 版本和 gradle 版本的不兼容造成的。先不折腾，注释掉 merge.into 语句。<br>4.将源码文件夹改为只读，防止不小心修改。<br>   <code>chmod -R 555 spring-framework-3.2.15.RELEASE</code></p>
@@ -83,7 +83,16 @@
 </ul>
 </li>
 </ol>
-<p>&emsp;&emsp;问题来了,看到个不太懂得玩意，<strong>对 XML 文件的验证模式</strong>？看了下代码，如果 XML 文件中包含“ DOCTYPE ”，则使用 DTD 进行验证，否则使用 XSD。DTD 和 XSD 有啥区别呢？请移步另一片博文：<a href=""> XML 文件的验证模式</a><br>&emsp;&emsp;关于通过 JAXP 的 dom 接口(<em>《 spring 源码深度解析》里作者说是使用 SAX 接口来解析的，需要纠正</em>)来解析 XML 文档，需要了解下 spring 实现了 ResourceEntityResolver 和 DelegatingEntityResolver 两种 EntityResolver。简单了解下 <strong>EntityResolver</strong>： 解析一个 XML 时，需要根据开头的声明去网络下载 DTD 文件，对 XML 进行格式验证。而重写 EntityResolver 就可以指定去本地寻找 DTD 文件，避免网络操作。<br>&emsp;&emsp;重点放在注册 bean 上，由于 spring 很好的践行了单一职责设计模式，所以类的跳转很多。先来到 DefaultBeanDefinitionDocumentReader.doRegisterBeanDefinitions：  </p>
+<p>&emsp;&emsp;问题来了,看到个不太懂得玩意，<strong>对 XML 文件的验证模式</strong>？看了下代码，如果 XML 文件中包含“ DOCTYPE ”，则使用 DTD 进行验证，否则使用 XSD。DTD 和 XSD 有啥区别呢？简单了解下：</p>
+<blockquote>
+<p>DTD 和 XSD 是对 XML 文件两种不同的约束方式。Spring 在 2.0 版本后开始引入 XSD，相比 DTD，XSD 本身就是 XML 文件，能被解析和处理，具有支持名称空间，扩展性强等优点，是 DTD 的替代者。Spring 中如果使用 DTD 进行验证 XML，则必须声明：<br><code>&lt;!DOCTYPE beans PUBLIC &quot;-//SPRING//DTD BEAN 2.0//EN&quot;
+            &quot;http://www.springframework.org/dtd/spring-beans-2.0.dtd&quot;&gt;</code></p>
+</blockquote>
+<p>&emsp;&emsp;关于通过 JAXP 的 dom 接口(<em>《 spring 源码深度解析》里作者说是使用 SAX 接口来解析的，需要纠正</em>)来解析 XML 文档，需要了解下 spring 实现了 ResourceEntityResolver 和 DelegatingEntityResolver 两种 EntityResolver。简单了解下 <strong>EntityResolver</strong>： </p>
+<blockquote>
+<p>解析一个 XML 时，需要根据开头的声明去网络下载 DTD 文件，对 XML 进行格式验证。而重写 EntityResolver 就可以指定去本地寻找 DTD 文件，避免网络操作。  </p>
+</blockquote>
+<p>&emsp;&emsp;重点放在注册 bean 上，由于 spring 很好的践行了单一职责设计模式，所以类的跳转很多。先来到 DefaultBeanDefinitionDocumentReader.doRegisterBeanDefinitions：  </p>
 <ol>
 <li><p><strong>处理“ profile ”属性</strong>：</p>
 <ul>
@@ -139,7 +148,7 @@ ctx.refresh();
 <p>则直接按照默认标签解析。否则，就需要按照自定义的解析。</p>
 </li>
 </ol>
-<p>&emsp;&emsp;spring-beans 模块暂时先阅读到这里，我们已经看到了核心的功能是怎么实现的。后面阅读其他模块时，还会需要回来看看的。下一个进行攻克的是 spring-context 模块。</p>
+<p>&emsp;&emsp;关于 bean 暂时先阅读到这里，我们已经看到了核心的功能是怎么实现的。下一篇来学习下 Spring-beans 模块中的注解功能。</p>
 <hr>
 <p>&emsp;&emsp;对于怎么去高效的阅读源码，我仍处于摸索当中。怎么用博客去更好的记录和表达我的阅读成果，对我也是个挑战。相信在时间的积淀下，我会找到读源码的正确姿势，同时，我也将慢慢进行改进，在博客中加入时序图等更加直观的方式。👊</p>
 ]]></content>
