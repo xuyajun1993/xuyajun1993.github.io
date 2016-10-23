@@ -93,7 +93,7 @@
 <meta property="og:site_name" content="西西弗的神话">
 <meta property="og:description" content="吐槽虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思">
 <meta property="og:image" content="http://xuyajun.xyz/images/AutowiredAnnotationBeanPostProcessor.png">
-<meta property="og:updated_time" content="2016-10-23T13:34:31.000Z">
+<meta property="og:updated_time" content="2016-10-23T13:38:54.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="西西弗的神话">
 <meta name="twitter:description" content="吐槽虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思">
@@ -370,7 +370,7 @@
 <p>Any custom annotation can be used, since there are no required annotation attributes. There is no default, although a typical choice is the JSR-250  javax.annotation.PostConstruct  and javax.annotation.PreDestroy annotation.</p>
 </blockquote>
 </li>
-<li><p>findLifecycleMetadata：调用 buildLifecycleMetadata 方法返回            LifecycleMetadata 并缓存起来。</p>
+<li><p>findLifecycleMetadata：调用 buildLifecycleMetadata 方法返回 LifecycleMetadata 并缓存起来。</p>
 </li>
 <li>postProcessBeforeInitialization：调用 findLifecycleMetadata 方法拿到 LifecycleMetadata 对象，并执行 invokeInitMethods ，即执行初始化方法。</li>
 <li>postProcessBeforeDestruction：调用 findLifecycleMetadata 方法拿到 LifecycleMetadata 对象，并执行 invokeDestroyMethods ，即执行销毁前的钩子方法。</li>
