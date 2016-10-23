@@ -86,20 +86,20 @@
 
 
 
-<meta name="description" content="&amp;emsp;&amp;emsp;首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
+<meta name="description" content="首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring-beans（bean）">
 <meta property="og:url" content="http://xuyajun.xyz/2016/09/24/Spring-beans（bean）/index.html">
 <meta property="og:site_name" content="西西弗的神话">
-<meta property="og:description" content="&amp;emsp;&amp;emsp;首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
+<meta property="og:description" content="首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
 <meta property="og:image" content="http://xuyajun.xyz/images/XmlBeanFactory.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/BeanFactory.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/RootBeanDefinition.png">
 <meta property="og:image" content="http://xuyajun.xyz/images/XmlBeanDefinitionReader.png">
-<meta property="og:updated_time" content="2016-10-23T13:07:53.000Z">
+<meta property="og:updated_time" content="2016-10-23T13:33:20.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring-beans（bean）">
-<meta name="twitter:description" content="&amp;emsp;&amp;emsp;首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
+<meta name="twitter:description" content="首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。">
 <meta name="twitter:image" content="http://xuyajun.xyz/images/XmlBeanFactory.png">
 
 
@@ -338,9 +338,9 @@
       
 
       
-        <p>&emsp;&emsp;首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。<br><a id="more"></a></p>
+        <p>首先感谢《 spring 源码深度解析》这本书，因为知道已经有前辈整理了阅读经验，让我更加能够坚持将源码进行到底。但为了达到锻炼自己最大化，我还是决定不直接去读，先按照自己的思路来。只有在不知道怎么继续下去的时候才借鉴一下前辈的经验。<br><a id="more"></a></p>
 <h1 id="先做点准备工作："><a href="#先做点准备工作：" class="headerlink" title="先做点准备工作："></a>先做点准备工作：</h1><p>1.下载 spring 源码，选择的是 3.2.15 版本。<br>2.因为 spring 已经由 maven 转向 gradle,所以需要较为深刻的了解下 gradle。通过 gradle 查看依赖树，从整体上弄清每个模块的关系和功能。<br>3.gradle 编译源码遇到问题：”A problem occurred configuring project ‘：spring-orm-hibernate4’”，通过 Google，这个貌似是 3.2 版本和 gradle 版本的不兼容造成的。先不折腾，注释掉 merge.into 语句。<br>4.将源码文件夹改为只读，防止不小心修改。<br>   <code>chmod -R 555 spring-framework-3.2.15.RELEASE</code></p>
-<h1 id="Bean："><a href="#Bean：" class="headerlink" title="Bean："></a>Bean：</h1><p>&emsp;&emsp;开始肯定是先找到一个切入类，我的做法是快速浏览一下项目的结构，熟悉每个 package 大概是什么功能。比如 Spring-beans 结构由 annotation，factory，propertyeditors，support 几个包组成，还有很多未放入包的类，不过，一看类名就知道大概是工具类和自定义的异常类。至于几个 package，annotation 里面定义了一些注解，propertyeditors 定义了数据类型之间的转换，support 提供了对 bean 排序等的一些支持功能，继续展开 factory，终于找到一个熟悉的类 XmlBeanFactory。<br>&emsp;&emsp;相信大家刚开始学习 spring 的时候肯定写过这行代码：<br><code>BeanFactory factory = new XmlBeanFactory(new ClassPathResource(&quot;applicationContext.xml&quot;));</code><br>&emsp;&emsp;打开发现该类已经 @Deprecated，谷歌了一下，和猜想的一样，3.1 版本已经被 applicationcontext 替换。<br><code>BeanFactory factory = new ClassPathXmlApplicationContext(&quot;applicationContext.xml&quot;);</code><br>而 applicationcontext 属于 context 模块下，但还是基于 beans 模块实现的。不管，先研究下 XmlBeanFactory。</p>
+<h1 id="Bean："><a href="#Bean：" class="headerlink" title="Bean："></a>Bean：</h1><p>开始肯定是先找到一个切入类，我的做法是快速浏览一下项目的结构，熟悉每个 package 大概是什么功能。比如 Spring-beans 结构由 annotation，factory，propertyeditors，support 几个包组成，还有很多未放入包的类，不过，一看类名就知道大概是工具类和自定义的异常类。至于几个 package，annotation 里面定义了一些注解，propertyeditors 定义了数据类型之间的转换，support 提供了对 bean 排序等的一些支持功能，继续展开 factory，终于找到一个熟悉的类 XmlBeanFactory。<br>相信大家刚开始学习 spring 的时候肯定写过这行代码：<br><code>BeanFactory factory = new XmlBeanFactory(new ClassPathResource(&quot;applicationContext.xml&quot;));</code><br>打开发现该类已经 @Deprecated，谷歌了一下，和猜想的一样，3.1 版本已经被 applicationcontext 替换。<br><code>BeanFactory factory = new ClassPathXmlApplicationContext(&quot;applicationContext.xml&quot;);</code><br>而 applicationcontext 属于 context 模块下，但还是基于 beans 模块实现的。不管，先研究下 XmlBeanFactory。</p>
 <h2 id="创建-bean"><a href="#创建-bean" class="headerlink" title="创建 bean"></a>创建 bean</h2><p>用 idea 显示出 XmlBeanFactory 的类图：<img src="/images/XmlBeanFactory.png" alt="alt text"></p>
 <p>ok,从 BeanFactory 入手，看看 bean 怎么被生产的，方法如图：<img src="/images/BeanFactory.png" alt="alt text">典型的工厂模式，这个就是创建 bean 的顶级工厂。<br>BeanFactory 有三个直接子类，也都是接口，初步看了一下，对应的功能分别如下：  </p>
 <ul>

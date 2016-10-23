@@ -86,17 +86,17 @@
 
 
 
-<meta name="description" content="吐槽:虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己">
+<meta name="description" content="吐槽虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Spring-beans（annotation）">
+<meta property="og:title" content="西西弗的神话">
 <meta property="og:url" content="http://xuyajun.xyz/2016/10/23/Spring-beans（annotation）/index.html">
 <meta property="og:site_name" content="西西弗的神话">
-<meta property="og:description" content="吐槽:虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己">
+<meta property="og:description" content="吐槽虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思">
 <meta property="og:image" content="http://xuyajun.xyz/images/AutowiredAnnotationBeanPostProcessor.png">
-<meta property="og:updated_time" content="2016-10-23T13:13:20.000Z">
+<meta property="og:updated_time" content="2016-10-23T13:34:31.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Spring-beans（annotation）">
-<meta name="twitter:description" content="吐槽:虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己">
+<meta name="twitter:title" content="西西弗的神话">
+<meta name="twitter:description" content="吐槽虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思">
 <meta name="twitter:image" content="http://xuyajun.xyz/images/AutowiredAnnotationBeanPostProcessor.png">
 
 
@@ -120,7 +120,7 @@
 
   <link rel="canonical" href="http://xuyajun.xyz/2016/10/23/Spring-beans（annotation）/"/>
 
-  <title> Spring-beans（annotation） | 西西弗的神话 </title>
+  <title>  | 西西弗的神话 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -260,7 +260,7 @@
             
             
               
-                Spring-beans（annotation）
+                
               
             
           </h1>
@@ -272,30 +272,11 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-10-23T21:06:50+08:00" content="2016-10-23">
+            <time itemprop="dateCreated" datetime="2016-10-23T21:06:51+08:00" content="2016-10-23">
               2016-10-23
             </time>
           </span>
 
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/Spring源码/" itemprop="url" rel="index">
-                    <span itemprop="name">Spring源码</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
           
 
           
@@ -313,7 +294,7 @@
 
           
           
-             <span id="/2016/10/23/Spring-beans（annotation）/" class="leancloud_visitors" data-flag-title="Spring-beans（annotation）">
+             <span id="/2016/10/23/Spring-beans（annotation）/" class="leancloud_visitors" data-flag-title="">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -335,15 +316,15 @@
       
 
       
-        <p>吐槽:虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思路和水平写下去，看经典源码和看好书一样，岂能一遍就止。相信自己第二次，第三次读源码的时候，看到的是更加美丽的风景～<br><a id="more"></a></p>
-<p>&emsp;&emsp;先回顾下 java 自定义注解的实现过程，有三个组成部分：  </p>
+        <h2 id="吐槽"><a href="#吐槽" class="headerlink" title="吐槽"></a>吐槽</h2><p>虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思路和水平写下去，看经典源码和看好书一样，岂能一遍就止。相信自己第二次，第三次读源码的时候，看到的是更加美丽的风景～<br><a id="more"></a></p>
+<h1 id="注解三部曲"><a href="#注解三部曲" class="headerlink" title="注解三部曲"></a>注解三部曲</h1><p>先回顾下 java 自定义注解的实现过程，有三个组成部分：  </p>
 <ol>
 <li>写一个 @interface 定义一个注解，并指定 @Target，@Retention，@Documented，@Inherited</li>
 <li>按照 @Target 的范围，在类中用上自定义的注解</li>
 <li>使用反射技术来解析 java 类的注解，并做处理</li>
 </ol>
-<p>&emsp;&emsp;OK，进入正题。beans 中定义的注解有 Autowired,Qualifier,Configurable,Required,Value。这里 Autowired 最为关键和具有代表性。</p>
-<p>&emsp;&emsp;来看下 AutowiredAnnotationBeanPostProcessor 的类图：<img src="/images/AutowiredAnnotationBeanPostProcessor.png" alt="alt text"></p>
+<p>ok，进入正题。beans 中定义的注解有 Autowired,Qualifier,Configurable,Required,Value。这里 Autowired 最为关键和具有代表性。</p>
+<h1 id="Autowired"><a href="#Autowired" class="headerlink" title="@Autowired"></a>@Autowired</h1><p>@Autowired 的定义很简单，直接来看下对应处理类 AutowiredAnnotationBeanPostProcessor 的类图：<img src="/images/AutowiredAnnotationBeanPostProcessor.png" alt="alt text"></p>
 <ul>
 <li>BeanPostProcessor：定义了 postProcessBeforeInitialization 和 postProcessAfterInitialization两个方法，用来对实例 bean 之前和之后做逻辑处理。</li>
 <li>InstantiationAwareBeanPostProcessor：该接口是 BeanPostProcessor 的子接口，postProcessBeforeInstantiation 方法用于阻止制定 bean 的实例化，用于懒加载等情况。postProcessPropertyValues 方法用于返回给定属性值的 bean。 </li>
@@ -359,37 +340,43 @@
 <li>determineCandidateConstructors：查看类的构造函数是否有 @Autowired 注解，并且做了检验：被注解了的构造函数必须有参数并且最多只有一个构造函数能被设置成 required＝true。最终函数返回空或者构造函数数组。</li>
 <li>buildAutowiringMetadata：对指定的 class，查找这个 class 和其superclass（一直到 superclass 为 null 止） 的所有加了 Autowired 注解的字段和方法（如果是桥接方法，需要找到原始方法），最后构造成 InjectionMetadata 对象返回。</li>
 <li><p>findAutowiringMetadata：</p>
-<p>InjectionMetadata metadata = this.injectionMetadataCache.get(cacheKey);<br>if (InjectionMetadata.needsRefresh(metadata, clazz)) {<br> synchronized (this.injectionMetadataCache) {</p>
-<pre><code>metadata = this.injectionMetadataCache.get(cacheKey);
-if (InjectionMetadata.needsRefresh(metadata, clazz)) {
-   if (metadata != null) {
-      metadata.clear(pvs);
-   }
-   metadata = buildAutowiringMetadata(clazz);
-   this.injectionMetadataCache.put(cacheKey, metadata);
-}
-</code></pre><p> }<br>}</p>
-<p> 双检锁（源码里很常见），这个方法调用 buildAutowiringMetadata 方法返回            InjectionMetadata 并缓存起来。</p>
+<pre><code>InjectionMetadata metadata = this.injectionMetadataCache.get(cacheKey);
+  if (InjectionMetadata.needsRefresh(metadata, clazz)) {
+     synchronized (this.injectionMetadataCache) {
+        metadata = this.injectionMetadataCache.get(cacheKey);
+        if (InjectionMetadata.needsRefresh(metadata, clazz)) {
+           if (metadata != null) {
+              metadata.clear(pvs);
+           }
+           metadata = buildAutowiringMetadata(clazz);
+           this.injectionMetadataCache.put(cacheKey, metadata);
+        }
+     }
+  }
+</code></pre><p>双检锁（源码里很常见），这个方法调用 buildAutowiringMetadata 方法 返回 InjectionMetadata 并缓存起来。</p>
 </li>
 </ol>
 </li>
 </ul>
-<p>&emsp;&emsp;在 annotation 包下，除了常用的几个注解相关类外，还有一个很重要的类 InitDestroyAnnotationBeanPostProcessor 。我们都知道 InitializingBean 和 DisposableBean 的用法，但官网有句话：</p>
+<h1 id="PostConstruct-amp-PreDestroy"><a href="#PostConstruct-amp-PreDestroy" class="headerlink" title="@PostConstruct &amp; @PreDestroy"></a>@PostConstruct &amp; @PreDestroy</h1><p>在 annotation 包下，除了常用的几个注解相关类外，还有一个很重要的类 InitDestroyAnnotationBeanPostProcessor 。我们都知道 InitializingBean 和 DisposableBean 的用法，但官网有句话：</p>
 <blockquote>
 <p>It is recommended that you do not use the InitializingBean interface because it unnecessarily couples the code to Spring.</p>
 </blockquote>
-<p>&emsp;&emsp;是的，我们更被建议使用 xml 配置或者在 java 代码里配置来实现初始化方法和销毁  bean 前钩子方法。而 InitDestroyAnnotationBeanPostProcessor 就是用来检测 bean 的这两种方法（分别被 @PostConstruct 和 @PreDestroy 注解）并使用反射调用。</p>
-<p>&emsp;&emsp;来剖析下几个重要方法：</p>
+<p>是的，我们更被建议使用 xml 配置或者在 java 代码里配置来实现初始化方法和销毁 bean 前钩子方法。而 InitDestroyAnnotationBeanPostProcessor 就是用来检测 bean 的这两种方法（分别被 @PostConstruct 和 @PreDestroy 注解）并使用反射调用。</p>
+<p>来剖析下几个重要方法：</p>
 <ol>
-<li>buildLifecycleMetadata：对指定的 class，查找这个 class 和其superclass（一直到 superclass 为 null 止） 的所有 initAnnotationType 和 destroyAnnotationType 方法。最终返回 LifecycleMetadata 。关于initAnnotationType 和 destroyAnnotationType ，解释如下：<br>Any custom annotation can be used, since there are no required annotation attributes. There is no default, although a typical choice is the JSR-250  javax.annotation.PostConstruct  and javax.annotation.PreDestroy annotation.</li>
-</ol>
-<ol>
-<li>findLifecycleMetadata：调用 buildLifecycleMetadata 方法返回            LifecycleMetadata 并缓存起来。</li>
+<li><p>buildLifecycleMetadata：对指定的 class，查找这个 class 和其superclass（一直到 superclass 为 null 止） 的所有 initAnnotationType 和 destroyAnnotationType 方法。最终返回 LifecycleMetadata 。关于initAnnotationType 和 destroyAnnotationType ，解释如下：</p>
+<blockquote>
+<p>Any custom annotation can be used, since there are no required annotation attributes. There is no default, although a typical choice is the JSR-250  javax.annotation.PostConstruct  and javax.annotation.PreDestroy annotation.</p>
+</blockquote>
+</li>
+<li><p>findLifecycleMetadata：调用 buildLifecycleMetadata 方法返回            LifecycleMetadata 并缓存起来。</p>
+</li>
 <li>postProcessBeforeInitialization：调用 findLifecycleMetadata 方法拿到 LifecycleMetadata 对象，并执行 invokeInitMethods ，即执行初始化方法。</li>
 <li>postProcessBeforeDestruction：调用 findLifecycleMetadata 方法拿到 LifecycleMetadata 对象，并执行 invokeDestroyMethods ，即执行销毁前的钩子方法。</li>
 </ol>
-<p>&emsp;&emsp;看了这两个类后就会发现，spring 中对注解的处理方法还是比较通俗易懂。然而开始看的一段时间却是懵逼中，直到后来才有柳暗花明又一村的感觉。</p>
-<p>&emsp;&emsp;beans 模块暂时就看到这里，我的打算是先尽快的阅读完每个模块，在脑中形成一个框架轮廓后，再进行针对的细读。嗯，读源码，我是认真的～</p>
+<p>看了这两个类后就会发现，spring 中对注解的处理方法还是比较通俗易懂。然而开始看的一段时间却是懵逼中，直到后来才有柳暗花明又一村的感觉。</p>
+<p>beans 模块暂时就看到这里，我的打算是先尽快的阅读完每个模块，在脑中形成一个框架轮廓后，再进行针对的细读。嗯，读源码，我是认真的～</p>
 
       
     </div>
@@ -469,7 +456,7 @@ if (InjectionMetadata.needsRefresh(metadata, clazz)) {
   <div class="comments" id="comments">
     
       <div class="ds-thread" data-thread-key="2016/10/23/Spring-beans（annotation）/"
-           data-title="Spring-beans（annotation）" data-url="http://xuyajun.xyz/2016/10/23/Spring-beans（annotation）/">
+           data-title="" data-url="http://xuyajun.xyz/2016/10/23/Spring-beans（annotation）/">
       </div>
     
   </div>
@@ -580,7 +567,7 @@ if (InjectionMetadata.needsRefresh(metadata, clazz)) {
               
             
             
-              <p class="post-toc-empty">此文章未包含目录</p>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#吐槽"><span class="nav-number">1.</span> <span class="nav-text">吐槽</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#注解三部曲"><span class="nav-number"></span> <span class="nav-text">注解三部曲</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Autowired"><span class="nav-number"></span> <span class="nav-text">@Autowired</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PostConstruct-amp-PreDestroy"><span class="nav-number"></span> <span class="nav-text">@PostConstruct & @PreDestroy</span></a></div>
             
           </div>
         </section>
