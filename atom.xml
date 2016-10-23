@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.xyz/"/>
-  <updated>2016-10-23T13:38:54.000Z</updated>
+  <updated>2016-10-23T13:43:13.000Z</updated>
   <id>http://xuyajun.xyz/</id>
   
   <author>
@@ -20,9 +20,9 @@
     <link href="http://xuyajun.xyz/2016/10/23/Spring-beans%EF%BC%88annotation%EF%BC%89/"/>
     <id>http://xuyajun.xyz/2016/10/23/Spring-beans（annotation）/</id>
     <published>2016-10-23T13:06:51.000Z</published>
-    <updated>2016-10-23T13:38:54.000Z</updated>
+    <updated>2016-10-23T13:43:13.000Z</updated>
     
-    <content type="html"><![CDATA[<h2 id="吐槽"><a href="#吐槽" class="headerlink" title="吐槽"></a>吐槽</h2><p>虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思路和水平写下去，看经典源码和看好书一样，岂能一遍就止。相信自己第二次，第三次读源码的时候，看到的是更加美丽的风景～<br><a id="more"></a></p>
+    <content type="html"><![CDATA[<p>虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思路和水平写下去，看经典源码和看好书一样，岂能一遍就止。相信自己第二次，第三次读源码的时候，看到的是更加美丽的风景～<br><a id="more"></a></p>
 <h1 id="注解三部曲"><a href="#注解三部曲" class="headerlink" title="注解三部曲"></a>注解三部曲</h1><p>先回顾下 java 自定义注解的实现过程，有三个组成部分：  </p>
 <ol>
 <li>写一个 @interface 定义一个注解，并指定 @Target，@Retention，@Documented，@Inherited</li>
@@ -76,7 +76,7 @@
 <p>Any custom annotation can be used, since there are no required annotation attributes. There is no default, although a typical choice is the JSR-250  javax.annotation.PostConstruct  and javax.annotation.PreDestroy annotation.</p>
 </blockquote>
 </li>
-<li><p>findLifecycleMetadata：调用 buildLifecycleMetadata 方法返回 LifecycleMetadata 并缓存起来。</p>
+<li><p>findLifecycleMetadata：调用 buildLifecycleMetadata 方法返回 LifecycleMetadata 并缓存起来。  </p>
 </li>
 <li>postProcessBeforeInitialization：调用 findLifecycleMetadata 方法拿到 LifecycleMetadata 对象，并执行 invokeInitMethods ，即执行初始化方法。</li>
 <li>postProcessBeforeDestruction：调用 findLifecycleMetadata 方法拿到 LifecycleMetadata 对象，并执行 invokeDestroyMethods ，即执行销毁前的钩子方法。</li>
@@ -87,7 +87,7 @@
     
     <summary type="html">
     
-      &lt;h2 id=&quot;吐槽&quot;&gt;&lt;a href=&quot;#吐槽&quot; class=&quot;headerlink&quot; title=&quot;吐槽&quot;&gt;&lt;/a&gt;吐槽&lt;/h2&gt;&lt;p&gt;虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思路和水平写下去，看经典源码和看好书一样，岂能一遍就止。相信自己第二次，第三次读源码的时候，看到的是更加美丽的风景～&lt;br&gt;
+      &lt;p&gt;虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思路和水平写下去，看经典源码和看好书一样，岂能一遍就止。相信自己第二次，第三次读源码的时候，看到的是更加美丽的风景～&lt;br&gt;
     
     </summary>
     
