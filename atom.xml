@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.cn/"/>
-  <updated>2016-11-27T11:11:02.000Z</updated>
+  <updated>2016-11-27T11:19:04.000Z</updated>
   <id>http://xuyajun.cn/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://xuyajun.cn/2016/11/27/%E3%80%8Aredis%20%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E3%80%8B/"/>
     <id>http://xuyajun.cn/2016/11/27/《redis 的设计与实现》/</id>
     <published>2016-11-27T10:50:28.000Z</published>
-    <updated>2016-11-27T11:11:02.000Z</updated>
+    <updated>2016-11-27T11:19:04.000Z</updated>
     
     <content type="html"><![CDATA[<p>看到有人这样形容 redis,像一把瑞士军刀，小巧，锋利，实用。在之前对 redis 虽有了解，却无法体会到这种感觉。看完这本同样精美的书，难抑赞赏之情。redis 在很多场景确实是很好的方案，不仅可以当数据库用，还可以拿来当消息队列，缓存来使。更重要的是，看完它的设计与实现，更能够意识到：任何精美的技术产品都不是飘在云端，可望不可即，深挖底层，就能掌握一切窍门。（这也是笔者一直坚持在做的事💪🏼）<a id="more"></a></p>
 <h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>让我们从一张图开始学习 redis 为了支持多种数据类型实现了哪些高效率的数据结构。<br><img src="/images/redisobject.png" alt="alt text">     </p>
@@ -52,15 +52,17 @@
 <ul>
 <li>高效执行长度计算，O(1) 复杂度</li>
 <li>高效执行追加操作（预分配内存，减少内存分配次数，用空间换时间）</li>
-<li>二进制安全（程序不应对字符串保存的数据做任何假设，数据可以是以 “\0” 结尾，也可以是单纯的字节数组或其他格式数据。而 C 中的char * 以 “\0” 结束）<h3 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h3>  typedef struct intset{<pre><code>//保存元素所使用的类型的长度
-uint32_t encoding;
-//元素个数
-uint32_t length;
-//保存元素的数组
-int8_t contents[];
-</code></pre>  }intset;</li>
+<li>二进制安全（程序不应对字符串保存的数据做任何假设，数据可以是以 “\0” 结尾，也可以是单纯的字节数组或其他格式数据。而 C 中的char * 以 “\0” 结束）</li>
 </ul>
-<p>整数集合用于有序，无重复的保存多个整数，并会根据元素的值，自动选择使用什么长度的整数类型来保存，但只支持升级，不支持降级。</p>
+<h3 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h3><pre><code>typedef struct intset{
+    //保存元素所使用的类型的长度
+    uint32_t encoding;
+    //元素个数
+    uint32_t length;
+    //保存元素的数组
+    int8_t contents[];
+}intset;
+</code></pre><p>整数集合用于有序，无重复的保存多个整数，并会根据元素的值，自动选择使用什么长度的整数类型来保存，但只支持升级，不支持降级。</p>
 <h3 id="双端链表"><a href="#双端链表" class="headerlink" title="双端链表"></a>双端链表</h3><pre><code>typedef struct listNode{
         //前驱节点
         struct listNode* prev;
@@ -174,21 +176,33 @@ typedef struct zskiplistNode{
 <h3 id="事务："><a href="#事务：" class="headerlink" title="事务："></a>事务：</h3><ul>
 <li>当客户端使用 MULTI 开始事务时，会用事务队列保存客户端的命令</li>
 <li>使用 WATCH 命令的事务会将客户端和被监视的键在数据库的 watched_keys 字典中进行关联，当键被修改时，程序会将所有监视被修改键的客户端的 REDIS_DIRTY_CAS 选项打开，这样客户端执行事务时，直接返回失败</li>
-<li>redis 事务只保证一致性和隔离性，不保证原子性和持久性<h3 id="订阅与发布："><a href="#订阅与发布：" class="headerlink" title="订阅与发布："></a>订阅与发布：</h3></li>
+<li>redis 事务只保证一致性和隔离性，不保证原子性和持久性</li>
+</ul>
+<h3 id="订阅与发布："><a href="#订阅与发布：" class="headerlink" title="订阅与发布："></a>订阅与发布：</h3><ul>
 <li>订阅信息由服务器进程维护的 redisServer.pubsub_channels 字典保存，字典的键为被订阅的频道，字典的值为订阅频道的所有客户端</li>
 <li>当有新消息发送到频道上，程序遍历频道所对应的所有客户端，然后发送消息</li>
-<li>订阅模式的信息由 redisServer.pubsub_patterns 链表保存，链表的每个节点都保存着一个 pubsubPattern 结构，结构中保存着被订阅的模式，以及订阅该模式的客户端。<h3 id="lua脚本："><a href="#lua脚本：" class="headerlink" title="lua脚本："></a>lua脚本：</h3></li>
+<li>订阅模式的信息由 redisServer.pubsub_patterns 链表保存，链表的每个节点都保存着一个 pubsubPattern 结构，结构中保存着被订阅的模式，以及订阅该模式的客户端。</li>
+</ul>
+<h3 id="lua脚本："><a href="#lua脚本：" class="headerlink" title="lua脚本："></a>lua脚本：</h3><ul>
 <li>EVAL 命令为输入脚本定义一个 Lua 函数，然后通过执行这个函数来执行脚本</li>
-<li>EVALSHA 通过构建函数名，直接调用 Lua 中已定义的函数，从而执行相应的脚本<h3 id="满查询日志："><a href="#满查询日志：" class="headerlink" title="满查询日志："></a>满查询日志：</h3></li>
+<li>EVALSHA 通过构建函数名，直接调用 Lua 中已定义的函数，从而执行相应的脚本</li>
+</ul>
+<h3 id="满查询日志："><a href="#满查询日志：" class="headerlink" title="满查询日志："></a>满查询日志：</h3><ul>
 <li>redis 用一个链表以 FIFO 的顺序保存着所有慢查询日志</li>
-<li>每条慢查询日志以一个慢查询节点表示，节点中记录着执行超时的命令，命令的参数，命令执行的时间以及执行命令所消耗的时间等信息<h3 id="RDB"><a href="#RDB" class="headerlink" title="RDB:"></a>RDB:</h3></li>
+<li>每条慢查询日志以一个慢查询节点表示，节点中记录着执行超时的命令，命令的参数，命令执行的时间以及执行命令所消耗的时间等信息</li>
+</ul>
+<h3 id="RDB"><a href="#RDB" class="headerlink" title="RDB:"></a>RDB:</h3><ul>
 <li>rdbSave 会将数据库数据保存到 RDB 文件，并在保存之前阻塞调用者</li>
 <li>SAVE 命令直接调用 rdbSave ，阻塞主进程，BGSAVE 用子进程调用，主进程可以继续处理请求</li>
-<li>SAVE 执行期间，AOF 写入可以在后台线程进行，BGREWRITEAOF 可以在子进程进行，所以这三种操作可以同时进行<h3 id="AOF"><a href="#AOF" class="headerlink" title="AOF:"></a>AOF:</h3></li>
+<li>SAVE 执行期间，AOF 写入可以在后台线程进行，BGREWRITEAOF 可以在子进程进行，所以这三种操作可以同时进行</li>
+</ul>
+<h3 id="AOF"><a href="#AOF" class="headerlink" title="AOF:"></a>AOF:</h3><ul>
 <li>AOF 文件通过保存所有修改数据库的命令来记录数据库的状态</li>
 <li>AOF 文件中的所有命令都以 Redis 通讯协议的格式保存</li>
 <li>不同的 AOF 保存模式（ AOF_FSYNC_NO ／ AOF_FSYNC_EVERYSEC / AOF_FSYNC_ALWAYS）对数据的安全性，以及 redis 的性能有很大的影响</li>
-<li>AOF 重写是为了用更小的体积来保存数据库状态<h3 id="事件："><a href="#事件：" class="headerlink" title="事件："></a>事件：</h3></li>
+<li>AOF 重写是为了用更小的体积来保存数据库状态</li>
+</ul>
+<h3 id="事件："><a href="#事件：" class="headerlink" title="事件："></a>事件：</h3><ul>
 <li>redis 的事件分为时间事件和文件事件</li>
 <li>文件事件分为读事件和写事件：读事件实现了命令请求的接受，写事件实现了命令结果的返回</li>
 <li>时间事件分为单次执行事件和循环执行事件，服务器 serverCron 就是循环事件</li>
