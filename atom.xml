@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.cn/"/>
-  <updated>2016-11-16T14:51:43.000Z</updated>
+  <updated>2016-11-27T11:11:02.000Z</updated>
   <id>http://xuyajun.cn/</id>
   
   <author>
@@ -16,15 +16,208 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>《redis 的设计与实现》</title>
+    <link href="http://xuyajun.cn/2016/11/27/%E3%80%8Aredis%20%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E3%80%8B/"/>
+    <id>http://xuyajun.cn/2016/11/27/《redis 的设计与实现》/</id>
+    <published>2016-11-27T10:50:28.000Z</published>
+    <updated>2016-11-27T11:11:02.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>看到有人这样形容 redis,像一把瑞士军刀，小巧，锋利，实用。在之前对 redis 虽有了解，却无法体会到这种感觉。看完这本同样精美的书，难抑赞赏之情。redis 在很多场景确实是很好的方案，不仅可以当数据库用，还可以拿来当消息队列，缓存来使。更重要的是，看完它的设计与实现，更能够意识到：任何精美的技术产品都不是飘在云端，可望不可即，深挖底层，就能掌握一切窍门。（这也是笔者一直坚持在做的事💪🏼）<a id="more"></a></p>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>让我们从一张图开始学习 redis 为了支持多种数据类型实现了哪些高效率的数据结构。<br><img src="/images/redisobject.png" alt="alt text">     </p>
+<p>正如图中看到的，redis 不像 memcached 只支持了字符串类型，需求量大的列表，集合，有序集合，哈希表都能支持。而支撑这些类型的是底层多种数据结构，每种类型可以由不同的数据结构实现，书中称之为编码方式。redis 将数据类型，编码方式，指针等信息封装成 redisObject，可以理解为 redis 是 &lt; sds,redisObject &gt;键值对数据库。redisObject 结构体如下：</p>
+<pre><code>typedef struct redisObject{
+    //类型
+    unsigned type:4;
+    //对齐位
+    unsigned notused:2;
+    //编码方式
+    unsigned encoding:4;
+    //LRU时间
+    unsigned lru:22;
+    //引用计数
+    int refcount;
+    //指向对象的值
+    void *ptr;
+}robj;
+</code></pre><p>接下来让我们挨个看下这些数据结构怎么被封装的。</p>
+<h3 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h3><pre><code>struct sdshdr{
+    //buf已占用长度
+    int len;
+    //buf剩余可用长度
+    int free;
+    //实际保存字符串数据的地方
+    char buf[];
+}
+</code></pre><p>相比 C 语言中的 char* ，redis 封装 sds 用来表示字符串主要有下面三个好处：</p>
+<ul>
+<li>高效执行长度计算，O(1) 复杂度</li>
+<li>高效执行追加操作（预分配内存，减少内存分配次数，用空间换时间）</li>
+<li>二进制安全（程序不应对字符串保存的数据做任何假设，数据可以是以 “\0” 结尾，也可以是单纯的字节数组或其他格式数据。而 C 中的char * 以 “\0” 结束）<h3 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h3>  typedef struct intset{<pre><code>//保存元素所使用的类型的长度
+uint32_t encoding;
+//元素个数
+uint32_t length;
+//保存元素的数组
+int8_t contents[];
+</code></pre>  }intset;</li>
+</ul>
+<p>整数集合用于有序，无重复的保存多个整数，并会根据元素的值，自动选择使用什么长度的整数类型来保存，但只支持升级，不支持降级。</p>
+<h3 id="双端链表"><a href="#双端链表" class="headerlink" title="双端链表"></a>双端链表</h3><pre><code>typedef struct listNode{
+        //前驱节点
+        struct listNode* prev;
+        //后驱节点
+        struct listNode* next;
+        //值
+        void *value;
+    }listNode;
+
+typedef struct list{
+    //表头指针
+    listNode *head;
+    //表尾指针
+    listNode *tail;
+    //节点数量
+    unsigned long len;
+    //复制函数
+    void *(*dup)(void *ptr);
+    //释放函数
+    void *(*free)(void *ptr);
+    //对比函数
+    int (*match)(void *ptr,void *key);
+}list;
+
+typedef struct listIter{
+    //下一节点
+    listNode *next;
+    //迭代方向
+    int direction;
+}listIter;        
+</code></pre><p>由于 C 本身不支持链表，所以 redis 像其他 C 程序一样，对链表进行了自己的实现。至于双端链表的特点，就不在此细说。</p>
+<h3 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h3><pre><code>typedef struct dict{
+        //特定于类型的处理函数
+        dictType *type;
+        //类型处理函数的私有数据
+        void *privdata;
+        //哈希表（2个，用来实现渐进式 rehash）
+        dictht ht[2];
+        //记录 rehash 进度的标志，－1表示 rehash 未进行
+        int rehashidx;
+        //当前正在运作的安全迭代器数量
+        int iterators;
+    }dict;
+
+typedef struct dictht{
+    //哈希表节点指针数组（俗称桶，bucket）
+    dictEntry **table;
+    //指针数组的大小
+    unsigned long size;
+    //指针数组的长度掩码，用于计算索引值
+    unsigned long sizemask;
+    //哈希表现有的节点数量
+    unsigned long used;
+}dictht;
+
+typedef struct dictEntry{
+    //键
+    void *key;
+    //值
+    union{
+        void *val;
+        uint64_t u64;
+        int64_t s64;
+    }v;
+    //链后继节点
+    struct dictEntry *next;
+}dictEntry;
+
+typedef struct dictIterator{
+    //正在迭代的字典
+    dict *d;
+    //正在迭代的哈希表号码（0/1）
+    int table;
+    //正在迭代的哈希表数组的索引
+    int index;
+    //是否安全
+    int safe;
+    //当前哈希节点
+    dictEntry *entry;
+    //当前哈希节点的后继节点
+    dictEntry *nextEntry;
+}dictIterator; 
+</code></pre><p>   看书看到这里的时候有点懵逼，被书中的哈希键，哈希表，字典一下子整乱了。这里需要梳理下：<br>   redis 使用了高效且实现简单的哈希表来作为字典的底层实现。而上图 redisobjcet 中的数据类型中也有个哈希表，这个代表上层的数据类型，也被叫做散列。实际上，redis 中的散列类型使用字典和压缩链表两种作为底层实现，因为压缩链表比较节省内存，所以在新建 Hash 键时，默认使用压缩链表，当满足某些条件时，底层才转化为字典。</p>
+<h3 id="压缩列表"><a href="#压缩列表" class="headerlink" title="压缩列表"></a>压缩列表</h3><p><img src="/images/ziplist.png" alt="alt text"><br>ziplist是由一系列特殊编码的内存块构成的列表(所以不像其他数据结构用结构体表示)，可以保存字符数组或整数值，用来作为散列，列表和有序集合的底层实现之一。</p>
+<h3 id="跳跃表"><a href="#跳跃表" class="headerlink" title="跳跃表"></a>跳跃表</h3><pre><code>typedef struct zskiplist{
+    //头节点，尾节点
+    struct zskiplistNode *header,*tail;
+    //节点数量
+    unsigned long len;
+    //目前表内节点的最大层数
+    int level;
+}zskiplist;
+
+typedef struct zskiplistNode{
+    //member对象
+    robj *obj;
+    //分值
+    double score;
+    //后退指针
+    struct zskiplistNode *backward;
+    //层
+    struct zskiplistLevel{
+        //前进指针
+        struct zskiplistNode *forward;
+        //这个层跨越的节点数量
+        unsigned int span;
+    }level[];
+}zskiplistNode;
+</code></pre><p>跳跃表的效率可以和平衡树媲美－查找，删除，添加的时间复杂度都可以达到 O(logN)，并且，跳跃表的实现要简单的多。<br>跳越表在 redis 中主要用来实现有序集合。</p>
+<h2 id="功能一览"><a href="#功能一览" class="headerlink" title="功能一览"></a>功能一览</h2><p>看完了这些底层，也就不难理解 redis 是如何实现那些数据库必备的功能了。无非是在底层数据结构基础之上加上一些逻辑。我们来简单过下书中提到的功能，更全功能请看<a href="http://www.redis.cn/documentation.html" target="_blank" rel="external">官方文档</a>：</p>
+<h3 id="事务："><a href="#事务：" class="headerlink" title="事务："></a>事务：</h3><ul>
+<li>当客户端使用 MULTI 开始事务时，会用事务队列保存客户端的命令</li>
+<li>使用 WATCH 命令的事务会将客户端和被监视的键在数据库的 watched_keys 字典中进行关联，当键被修改时，程序会将所有监视被修改键的客户端的 REDIS_DIRTY_CAS 选项打开，这样客户端执行事务时，直接返回失败</li>
+<li>redis 事务只保证一致性和隔离性，不保证原子性和持久性<h3 id="订阅与发布："><a href="#订阅与发布：" class="headerlink" title="订阅与发布："></a>订阅与发布：</h3></li>
+<li>订阅信息由服务器进程维护的 redisServer.pubsub_channels 字典保存，字典的键为被订阅的频道，字典的值为订阅频道的所有客户端</li>
+<li>当有新消息发送到频道上，程序遍历频道所对应的所有客户端，然后发送消息</li>
+<li>订阅模式的信息由 redisServer.pubsub_patterns 链表保存，链表的每个节点都保存着一个 pubsubPattern 结构，结构中保存着被订阅的模式，以及订阅该模式的客户端。<h3 id="lua脚本："><a href="#lua脚本：" class="headerlink" title="lua脚本："></a>lua脚本：</h3></li>
+<li>EVAL 命令为输入脚本定义一个 Lua 函数，然后通过执行这个函数来执行脚本</li>
+<li>EVALSHA 通过构建函数名，直接调用 Lua 中已定义的函数，从而执行相应的脚本<h3 id="满查询日志："><a href="#满查询日志：" class="headerlink" title="满查询日志："></a>满查询日志：</h3></li>
+<li>redis 用一个链表以 FIFO 的顺序保存着所有慢查询日志</li>
+<li>每条慢查询日志以一个慢查询节点表示，节点中记录着执行超时的命令，命令的参数，命令执行的时间以及执行命令所消耗的时间等信息<h3 id="RDB"><a href="#RDB" class="headerlink" title="RDB:"></a>RDB:</h3></li>
+<li>rdbSave 会将数据库数据保存到 RDB 文件，并在保存之前阻塞调用者</li>
+<li>SAVE 命令直接调用 rdbSave ，阻塞主进程，BGSAVE 用子进程调用，主进程可以继续处理请求</li>
+<li>SAVE 执行期间，AOF 写入可以在后台线程进行，BGREWRITEAOF 可以在子进程进行，所以这三种操作可以同时进行<h3 id="AOF"><a href="#AOF" class="headerlink" title="AOF:"></a>AOF:</h3></li>
+<li>AOF 文件通过保存所有修改数据库的命令来记录数据库的状态</li>
+<li>AOF 文件中的所有命令都以 Redis 通讯协议的格式保存</li>
+<li>不同的 AOF 保存模式（ AOF_FSYNC_NO ／ AOF_FSYNC_EVERYSEC / AOF_FSYNC_ALWAYS）对数据的安全性，以及 redis 的性能有很大的影响</li>
+<li>AOF 重写是为了用更小的体积来保存数据库状态<h3 id="事件："><a href="#事件：" class="headerlink" title="事件："></a>事件：</h3></li>
+<li>redis 的事件分为时间事件和文件事件</li>
+<li>文件事件分为读事件和写事件：读事件实现了命令请求的接受，写事件实现了命令结果的返回</li>
+<li>时间事件分为单次执行事件和循环执行事件，服务器 serverCron 就是循环事件</li>
+<li>文件事件和时间事件是合作关系：一种事件会等待另一种事件完成之后再执行，不会出现抢占情况</li>
+</ul>
+<p>redis 虽然可以落地，但毕竟是基于内存的，所以适用场景还主要集中于小而热的数据。我想，这也是为什么被形容为瑞士军刀的原因，不能指望它去支撑过大的数据量，那是 mongodb,hbase 份内的事。可惜的是，笔者还没有实战过大数据量情况下使用 redis 性能会如何，已经迫不及待啦！</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;看到有人这样形容 redis,像一把瑞士军刀，小巧，锋利，实用。在之前对 redis 虽有了解，却无法体会到这种感觉。看完这本同样精美的书，难抑赞赏之情。redis 在很多场景确实是很好的方案，不仅可以当数据库用，还可以拿来当消息队列，缓存来使。更重要的是，看完它的设计与实现，更能够意识到：任何精美的技术产品都不是飘在云端，可望不可即，深挖底层，就能掌握一切窍门。（这也是笔者一直坚持在做的事💪🏼）
+    
+    </summary>
+    
+      <category term="读书笔记" scheme="http://xuyajun.cn/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+    
+  </entry>
+  
+  <entry>
     <title>除了拥抱，别的都不想要</title>
     <link href="http://xuyajun.cn/2016/11/16/%E9%99%A4%E4%BA%86%E6%8B%A5%E6%8A%B1%EF%BC%8C%E5%88%AB%E7%9A%84%E9%83%BD%E4%B8%8D%E6%83%B3%E8%A6%81/"/>
     <id>http://xuyajun.cn/2016/11/16/除了拥抱，别的都不想要/</id>
     <published>2016-11-16T14:42:18.000Z</published>
-    <updated>2016-11-16T14:51:43.000Z</updated>
+    <updated>2016-11-27T10:54:31.000Z</updated>
     
     <content type="html"><![CDATA[<h2 id="除了拥抱，别的都不想要"><a href="#除了拥抱，别的都不想要" class="headerlink" title="除了拥抱，别的都不想要"></a>除了拥抱，别的都不想要</h2><h6 id="谢谢你，仿佛迷雾星辰，深海灯塔，温暖我整个漫长冬夜。"><a href="#谢谢你，仿佛迷雾星辰，深海灯塔，温暖我整个漫长冬夜。" class="headerlink" title="谢谢你，仿佛迷雾星辰，深海灯塔，温暖我整个漫长冬夜。"></a>谢谢你，仿佛迷雾星辰，深海灯塔，温暖我整个漫长冬夜。</h6><p>从某种意义上来说，这是一份内心独白。<a id="more"></a>      </p>
 <p>于下个月和徐先森开启在一起的第4个年岁。不知从什么时候开始，我已不再怀有恋爱中的女生最大的痛苦，习惯了他时时刻刻表现得像只二货，却不再期待他是个懂得撩妹的绅士。尽管如此，我并不认为我俩已过了热恋期，相反地，我们比以前更依恋彼此。 </p>
-<p><img src="/images/lover.jpg" alt="alt text">     </p>
+<p><img src="/images/lover.png" alt="alt text">     </p>
 <p>当然咯，我们的爱情也曾有过波折，争吵和闹分手也曾是家常便饭。后来徐先森将其均归结为年少不懂事（谁说你现在成熟了？）。     </p>
 <p>如今虽分隔两地，我们之间的交流却不会少，非常感谢徐先森成了我的小小人生导师，常常给我不可估的力量。当我初来天津， 在这陌生的城市里，我并不是一个人迷茫，一个人孤单，一个人压抑，一个人努力。我有徐先森，他陪着我渡过艰难的日子，给我前进的方向。所以，我是幸运的。我一直认为两个人在一起光凭“你喜欢我，恰好我也喜欢你”是不够的，必须要有相同的世界观和价值观。一方面，徐先森最近研究的哲学我虽不甚感兴趣，却也潜移默化地改变了我俩的相处模式，我觉得他越来越有责任感。我们都知道找有责任感的男朋友，然而，责任感就像“自我”一样，是很难触摸到的东西。你不能听信男生的说辞，而是要自己去看去思考。我认为坚持，对于男人而言，就是责任感。另一方面，听过最好的情话是：我想和你一起向前努力。维持恋爱关系很重要的一点是两个人必须都有足够的动力相互扶持走下去，追求更美好的生活。有一种脆弱，是怕你飞远去，怕你离我而去，更怕你永远停留在这里。徐先森现在已是社会人士，而我还在校园为学业奋战，好在我们的话题永远不断，不说从诗词歌赋到人生哲学，倒也能有两人都感兴趣的热闻。    </p>
 <p>实不相瞒，我年少时期待的浪漫，是对方当众送花，看向你的嘴角时始终带着宠溺的笑……几年的恋爱期，现在的我，期待更多的，是每次见面都能有一个大大的拥抱。除了拥抱，别的都不想要。</p>
