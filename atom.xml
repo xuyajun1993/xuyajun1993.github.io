@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.cn/"/>
-  <updated>2016-12-25T14:30:01.000Z</updated>
+  <updated>2016-12-25T14:31:32.000Z</updated>
   <id>http://xuyajun.cn/</id>
   
   <author>
@@ -17,10 +17,10 @@
   
   <entry>
     <title>Spring-context（cache）.md</title>
-    <link href="http://xuyajun.cn/2016/12/25/Spring-context%EF%BC%88cache%EF%BC%89-md/"/>
-    <id>http://xuyajun.cn/2016/12/25/Spring-context（cache）-md/</id>
+    <link href="http://xuyajun.cn/2016/12/25/Spring-context%EF%BC%88cache%EF%BC%89/"/>
+    <id>http://xuyajun.cn/2016/12/25/Spring-context（cache）/</id>
     <published>2016-12-25T14:19:52.000Z</published>
-    <updated>2016-12-25T14:30:01.000Z</updated>
+    <updated>2016-12-25T14:31:32.000Z</updated>
     
     <content type="html"><![CDATA[<p>先来看下 context 工程下有哪些包吧：<br><img src="/images/spring-context.png" alt="alt text">  </p>
 <p>对这些 package 进行简单分析，context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。<a id="more"></a></p>
