@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.cn/"/>
-  <updated>2016-12-25T14:27:13.000Z</updated>
+  <updated>2016-12-25T14:30:01.000Z</updated>
   <id>http://xuyajun.cn/</id>
   
   <author>
@@ -20,10 +20,10 @@
     <link href="http://xuyajun.cn/2016/12/25/Spring-context%EF%BC%88cache%EF%BC%89-md/"/>
     <id>http://xuyajun.cn/2016/12/25/Spring-context（cache）-md/</id>
     <published>2016-12-25T14:19:52.000Z</published>
-    <updated>2016-12-25T14:27:13.000Z</updated>
+    <updated>2016-12-25T14:30:01.000Z</updated>
     
     <content type="html"><![CDATA[<p>先来看下 context 工程下有哪些包吧：<br><img src="/images/spring-context.png" alt="alt text">  </p>
-<p>对这些 package 进行简单分析，context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。</p>
+<p>对这些 package 进行简单分析，context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。<a id="more"></a></p>
 <h2 id="cache"><a href="#cache" class="headerlink" title="cache"></a>cache</h2><p>平时应用中配置的基本都是 encache 缓存，现在细想一下，spring 既然支持集成三方缓存，就必然在底层封装了一层抽象，这样就既可以使用内部实现又能够支持三方的东西。想到这，context 工程下这么多抽象也就能够理解了。<br>既然是对 cache 提供抽象，按照经验，也多多少少能猜到点套路，主要围绕提供缓存注解及注解处理器，缓存管理器。以老司机的心态来让我们一步步剥开～</p>
 <p>###缓存相关的注解###</p>
 <ol>
@@ -144,7 +144,7 @@
     <summary type="html">
     
       &lt;p&gt;先来看下 context 工程下有哪些包吧：&lt;br&gt;&lt;img src=&quot;/images/spring-context.png&quot; alt=&quot;alt text&quot;&gt;  &lt;/p&gt;
-&lt;p&gt;对这些 package 进行简单分析，context 主要提供了 cache，jndi，sche
+&lt;p&gt;对这些 package 进行简单分析，context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。
     
     </summary>
     
