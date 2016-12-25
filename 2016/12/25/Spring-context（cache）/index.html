@@ -93,7 +93,7 @@
 <meta property="og:site_name" content="西西弗的神话">
 <meta property="og:description" content="context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。">
 <meta property="og:image" content="http://xuyajun.cn/images/spring-context.png">
-<meta property="og:updated_time" content="2016-12-25T14:35:04.000Z">
+<meta property="og:updated_time" content="2016-12-25T14:36:42.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring-context（cache）">
 <meta name="twitter:description" content="context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。">
@@ -344,7 +344,7 @@
 <li>@Caching<br> 当需要对一个方法进行多个相同类型的注解时，可以使用该注解，允许你指定多个 Cacheable／CachePut／CacheEvict。  </li>
 </ol>
 <p>在你对自己感兴趣的方法或类上进行了缓存注解后，并不能生效，需要你在 xml 中使用<code>&lt;cache:annotation-driven/&gt;</code>或者在 java 代码中使用 @EnableCaching 注解来开启缓存管理功能。    </p>
-<h3 id="扫描缓存注解"><a href="#扫描缓存注解" class="headerlink" title="扫描缓存注解"></a>扫描缓存注解</h3><p>AnnotationCacheOperationSource 类用来查找类或方法中与 cache 相关的一种或多种注解，如果构造器不传入 CacheAnnotationParser ，则默认使用 SpringCacheAnnotationParser 来扫描这个类或方法。而SpringCacheAnnotationParser 继承了 CacheAnnotationParser 接口，实现了对 cache 相关的所有注解的扫描并封装成 Collection<cacheoperation> 返回。  </cacheoperation></p>
+<h3 id="扫描缓存注解"><a href="#扫描缓存注解" class="headerlink" title="扫描缓存注解"></a>扫描缓存注解</h3><p>AnnotationCacheOperationSource 类用来查找类或方法中与 cache 相关的一种或多种注解，如果构造器不传入 CacheAnnotationParser ，则默认使用 SpringCacheAnnotationParser 来扫描这个类或方法。而 SpringCacheAnnotationParser 继承了 CacheAnnotationParser 接口，实现了对 cache 相关的所有注解的扫描并封装成 Collection<cacheoperation> 返回。  </cacheoperation></p>
 <pre><code>@Override
     public Collection&lt;CacheOperation&gt; parseCacheAnnotations(AnnotatedElement ae) {
         Collection&lt;CacheOperation&gt; ops = null;

@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.cn/"/>
-  <updated>2016-12-25T14:35:04.000Z</updated>
+  <updated>2016-12-25T14:36:42.000Z</updated>
   <id>http://xuyajun.cn/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://xuyajun.cn/2016/12/25/Spring-context%EF%BC%88cache%EF%BC%89/"/>
     <id>http://xuyajun.cn/2016/12/25/Spring-context（cache）/</id>
     <published>2016-12-25T14:19:52.000Z</published>
-    <updated>2016-12-25T14:35:04.000Z</updated>
+    <updated>2016-12-25T14:36:42.000Z</updated>
     
     <content type="html"><![CDATA[<p>context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。<a id="more"></a>package 如下：<br><img src="/images/spring-context.png" alt="alt text">  </p>
 <h2 id="cache"><a href="#cache" class="headerlink" title="cache"></a>cache</h2><p>平时应用中配置的基本都是 encache 缓存，现在细想一下，spring 既然支持集成三方缓存，就必然在底层封装了一层抽象，这样就既可以使用内部实现又能够支持三方的东西。想到这，context 工程下这么多抽象也就能够理解了。<br>既然是对 cache 提供抽象，按照经验，也多多少少能猜到点套路，主要围绕提供缓存注解及注解处理器，缓存管理器。以老司机的心态来让我们一步步剥开～</p>
@@ -31,7 +31,7 @@
 <li>@Caching<br> 当需要对一个方法进行多个相同类型的注解时，可以使用该注解，允许你指定多个 Cacheable／CachePut／CacheEvict。  </li>
 </ol>
 <p>在你对自己感兴趣的方法或类上进行了缓存注解后，并不能生效，需要你在 xml 中使用<code>&lt;cache:annotation-driven/&gt;</code>或者在 java 代码中使用 @EnableCaching 注解来开启缓存管理功能。    </p>
-<h3 id="扫描缓存注解"><a href="#扫描缓存注解" class="headerlink" title="扫描缓存注解"></a>扫描缓存注解</h3><p>AnnotationCacheOperationSource 类用来查找类或方法中与 cache 相关的一种或多种注解，如果构造器不传入 CacheAnnotationParser ，则默认使用 SpringCacheAnnotationParser 来扫描这个类或方法。而SpringCacheAnnotationParser 继承了 CacheAnnotationParser 接口，实现了对 cache 相关的所有注解的扫描并封装成 Collection<cacheoperation> 返回。  </cacheoperation></p>
+<h3 id="扫描缓存注解"><a href="#扫描缓存注解" class="headerlink" title="扫描缓存注解"></a>扫描缓存注解</h3><p>AnnotationCacheOperationSource 类用来查找类或方法中与 cache 相关的一种或多种注解，如果构造器不传入 CacheAnnotationParser ，则默认使用 SpringCacheAnnotationParser 来扫描这个类或方法。而 SpringCacheAnnotationParser 继承了 CacheAnnotationParser 接口，实现了对 cache 相关的所有注解的扫描并封装成 Collection<cacheoperation> 返回。  </cacheoperation></p>
 <pre><code>@Override
     public Collection&lt;CacheOperation&gt; parseCacheAnnotations(AnnotatedElement ae) {
         Collection&lt;CacheOperation&gt; ops = null;
