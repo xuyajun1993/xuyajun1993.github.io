@@ -86,20 +86,17 @@
 
 
 
-<meta name="description" content="先来看下 context 工程下有哪些包吧：  
-对这些 package 进行简单分析，context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。">
+<meta name="description" content="context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring-context（cache）">
 <meta property="og:url" content="http://xuyajun.cn/2016/12/25/Spring-context（cache）/index.html">
 <meta property="og:site_name" content="西西弗的神话">
-<meta property="og:description" content="先来看下 context 工程下有哪些包吧：  
-对这些 package 进行简单分析，context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。">
+<meta property="og:description" content="context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。">
 <meta property="og:image" content="http://xuyajun.cn/images/spring-context.png">
-<meta property="og:updated_time" content="2016-12-25T14:33:29.000Z">
+<meta property="og:updated_time" content="2016-12-25T14:35:04.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring-context（cache）">
-<meta name="twitter:description" content="先来看下 context 工程下有哪些包吧：  
-对这些 package 进行简单分析，context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。">
+<meta name="twitter:description" content="context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。">
 <meta name="twitter:image" content="http://xuyajun.cn/images/spring-context.png">
 
 
@@ -338,8 +335,7 @@
       
 
       
-        <p>先来看下 context 工程下有哪些包吧：<br><img src="/images/spring-context.png" alt="alt text">  </p>
-<p>对这些 package 进行简单分析，context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。<a id="more"></a></p>
+        <p>context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。<a id="more"></a>package 如下：<br><img src="/images/spring-context.png" alt="alt text">  </p>
 <h2 id="cache"><a href="#cache" class="headerlink" title="cache"></a>cache</h2><p>平时应用中配置的基本都是 encache 缓存，现在细想一下，spring 既然支持集成三方缓存，就必然在底层封装了一层抽象，这样就既可以使用内部实现又能够支持三方的东西。想到这，context 工程下这么多抽象也就能够理解了。<br>既然是对 cache 提供抽象，按照经验，也多多少少能猜到点套路，主要围绕提供缓存注解及注解处理器，缓存管理器。以老司机的心态来让我们一步步剥开～</p>
 <h3 id="缓存相关的注解"><a href="#缓存相关的注解" class="headerlink" title="缓存相关的注解"></a>缓存相关的注解</h3><ol>
 <li>@Cacheable<br> 用来表示该方法是可缓存的，当有相同 key 的请求来时，函数不必重复执行，直接从缓存中获取。至于这个 key，依赖于函数的所有参数或部分有区分度的参数。为了实现自定义部分参数生成 key，就必须提一下 SpEL（spring 表达式语言），它还可以帮助你实现条件缓存。（😂真的只是提一下，不了解的请自行看官方文档）</li>
