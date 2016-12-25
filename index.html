@@ -260,6 +260,251 @@
             
               
                 
+                <a class="post-title-link" href="/2016/12/25/Spring-context（cache）-md/" itemprop="url">
+                  Spring-context（cache）.md
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-12-25T22:19:52+08:00" content="2016-12-25">
+              2016-12-25
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Spring源码/" itemprop="url" rel="index">
+                    <span itemprop="name">Spring源码</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/12/25/Spring-context（cache）-md/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/12/25/Spring-context（cache）-md/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2016/12/25/Spring-context（cache）-md/" class="leancloud_visitors" data-flag-title="Spring-context（cache）.md">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>先来看下 context 工程下有哪些包吧：<br><img src="/images/spring-context.png" alt="alt text">  </p>
+<p>对这些 package 进行简单分析，context 主要提供了 cache，jndi，schedule，script 等功能的抽象。选取 cache 和 schedule 两个有代表性的来阅读吧，其他模块暂时不细读。</p>
+<h2 id="cache"><a href="#cache" class="headerlink" title="cache"></a>cache</h2><p>平时应用中配置的基本都是 encache 缓存，现在细想一下，spring 既然支持集成三方缓存，就必然在底层封装了一层抽象，这样就既可以使用内部实现又能够支持三方的东西。想到这，context 工程下这么多抽象也就能够理解了。<br>既然是对 cache 提供抽象，按照经验，也多多少少能猜到点套路，主要围绕提供缓存注解及注解处理器，缓存管理器。以老司机的心态来让我们一步步剥开～</p>
+<p>###缓存相关的注解###</p>
+<ol>
+<li>@Cacheable<br> 用来表示该方法是可缓存的，当有相同 key 的请求来时，函数不必重复执行，直接从缓存中获取。至于这个 key，依赖于函数的所有参数或部分有区分度的参数。为了实现自定义部分参数生成 key，就必须提一下 SpEL（spring 表达式语言），它还可以帮助你实现条件缓存。（😂真的只是提一下，不了解的请自行看官方文档）</li>
+<li>@CacheEvict<br> 和 Cacheable 相反，该注解用于删除缓存。用户可以选择执行一个方法后，在缓存中删除该 key 的 entry 或者直接删除全部 entry。</li>
+<li>@CachePut<br> 对方法使用该注解，将会每次都执行方法，并将结果更新到缓存中</li>
+<li>@Caching<br> 当需要对一个方法进行多个相同类型的注解时，可以使用该注解，允许你指定多个 Cacheable／CachePut／CacheEvict。  </li>
+</ol>
+<p>在你对自己感兴趣的方法或类上进行了缓存注解后，并不能生效，需要你在 xml 中使用<code>&lt;cache:annotation-driven/&gt;</code>或者在 java 代码中使用 @EnableCaching 注解来开启缓存管理功能。    </p>
+<p>###扫描缓存注解###</p>
+<p>AnnotationCacheOperationSource 类用来查找类或方法中与 cache 相关的一种或多种注解，如果构造器不传入 CacheAnnotationParser ，则默认使用 SpringCacheAnnotationParser 来扫描这个类或方法。而SpringCacheAnnotationParser 继承了 CacheAnnotationParser 接口，实现了对 cache 相关的所有注解的扫描并封装成 Collection<cacheoperation> 返回。  </cacheoperation></p>
+<pre><code>@Override
+    public Collection&lt;CacheOperation&gt; parseCacheAnnotations(AnnotatedElement ae) {
+        Collection&lt;CacheOperation&gt; ops = null;
+
+        Collection&lt;Cacheable&gt; cacheables = getAnnotations(ae, Cacheable.class);
+        if (cacheables != null) {
+            ops = lazyInit(ops);
+            for (Cacheable cacheable : cacheables) {
+                ops.add(parseCacheableAnnotation(ae, cacheable));
+            }
+        }
+        Collection&lt;CacheEvict&gt; evicts = getAnnotations(ae, CacheEvict.class);
+        if (evicts != null) {
+            ops = lazyInit(ops);
+            for (CacheEvict evict : evicts) {
+                ops.add(parseEvictAnnotation(ae, evict));
+            }
+        }
+        Collection&lt;CachePut&gt; puts = getAnnotations(ae, CachePut.class);
+        if (puts != null) {
+            ops = lazyInit(ops);
+            for (CachePut put : puts) {
+                ops.add(parsePutAnnotation(ae, put));
+            }
+        }
+        Collection&lt;Caching&gt; cachings = getAnnotations(ae, Caching.class);
+        if (cachings != null) {
+            ops = lazyInit(ops);
+            for (Caching caching : cachings) {
+                ops.addAll(parseCachingAnnotation(ae, caching));
+            }
+        }
+
+        return ops;
+    } 
+</code></pre><p>###缓存管理器###</p>
+<p>CacheManager 接口有多种实现，SimpleCacheManager 是针对应用只有一个 CacheManager，CompositeCacheManager 是针对多个 CacheManager，而 NoOpCacheManager 则是特殊的管理器，当你使用 CompositeCacheManager 配置了好几个缓存管理器时，可能会需要这种管理器来返回一个 Cache 的子类 NoOpCache。除了这三种，EhCacheCacheManager 和 JCacheCacheManager 也支持了 encache 和 java 的缓存（这就是抽象的目的）。 </p>
+<p>###加载方式<br>spring 可以让你通过 @EnableCaching 的 mode 值来选择是使用 基于 java 的代理（<em>AdviceMode.PROXY</em>）或者通过基于编织的 AspectJ（<em>AdviceMode.ASPECTJ</em>）来实现缓存的 aop。 </p>
+<p>来看下为了缓存内部实现的切面 CacheAspectSupport ，核心方法 execute 实现了对方法缓存注解的扫描并进行相应操作，代码如下：</p>
+<pre><code>protected Object execute(Invoker invoker, Object target, Method method, Object[] args) {
+        // check whether aspect is enabled
+        // to cope with cases where the AJ is pulled in automatically
+        if (!this.initialized) {
+            return invoker.invoke();
+        }
+
+        // get backing class
+        Class&lt;?&gt; targetClass = AopProxyUtils.ultimateTargetClass(target);
+        if (targetClass == null &amp;&amp; target != null) {
+            targetClass = target.getClass();
+        }
+        Collection&lt;CacheOperation&gt; cacheOp = getCacheOperationSource().getCacheOperations(method, targetClass);
+
+        // analyze caching information
+        if (!CollectionUtils.isEmpty(cacheOp)) {
+            Map&lt;String, Collection&lt;CacheOperationContext&gt;&gt; ops = createOperationContext(cacheOp, method, args, target, targetClass);
+            // start with evictions
+            inspectBeforeCacheEvicts(ops.get(EVICT));
+            // follow up with cacheable
+            CacheStatus status = inspectCacheables(ops.get(CACHEABLE));
+            Object retVal;
+            Map&lt;CacheOperationContext, Object&gt; updates = inspectCacheUpdates(ops.get(UPDATE));
+            if (status != null) {
+                if (status.updateRequired) {
+                    updates.putAll(status.cacheUpdates);
+                }
+                // return cached object
+                else {
+                    return status.retVal;
+                }
+            }
+            retVal = invoker.invoke();
+            inspectAfterCacheEvicts(ops.get(EVICT), retVal);
+            if (!updates.isEmpty()) {
+                update(updates, retVal);
+            }
+            return retVal;
+        }
+
+        return invoker.invoke();
+    }
+</code></pre><p>该抽象类子类 CacheInterceptor 实现了 MethodInterceptor 的 invoke 方法：</p>
+<pre><code>public Object invoke(final MethodInvocation invocation) throws Throwable {
+        Method method = invocation.getMethod();
+
+        Invoker aopAllianceInvoker = new Invoker() {
+            public Object invoke() {
+                try {
+                    return invocation.proceed();
+                } catch (Throwable ex) {
+                    throw new ThrowableWrapper(ex);
+                }
+            }
+        };
+
+        try {
+            return execute(aopAllianceInvoker, invocation.getThis(), method, invocation.getArguments());
+        } catch (ThrowableWrapper th) {
+            throw th.original;
+        }
+    }
+</code></pre><p>cache 抽象的重点就是这些了，主要借助于 aop 。可以预测，spring 中的其他大部分功能比如事务都是得益于 aop。本文没有对 aop 进行过多讲解，但其实 aop 才是真正值得深挖的点。很期待去挑战！</p>
+<hr>
+<p>为了更好的理解源码，最理想的是要对自己阅读部分的功能做个了解，这也是为什么建议大家在 spring 灵活运用的基础上再挑战源码。但平时使用的 spring 应用可能并无法覆盖所有功能，所以再阅读到没使用过的功能时，可以建助 <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#cache-annotations-cacheable" target="_blank" rel="external">spring 官方文档</a>来先了解这个功能，比如本文中的 cache 注解支持对笔者来说未在实际中应用过，通过先从文档了解这个功能，使用步骤后再阅读源码，就不那么云里雾里，反而还觉得顺理成章，就是应该这样实现。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/11/27/《redis 的设计与实现》/" itemprop="url">
                   《redis 的设计与实现》
                 </a>
@@ -600,7 +845,7 @@
 
       
         
-          <p>虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，唯心主义的我一向擅长迎难而上，自我鞭策。继续照着自己思路和水平写下去，看经典源码和看好书一样，岂能一遍就止。相信自己第二次，第三次读源码的时候，看到的是更加美丽的风景～<br>
+          <p>虽然在开始读源码之前就预料到会有很多障碍，但没想到障碍几乎无时不在。上篇对 bean 的解读就很吃力，写出来的也是让自己不满意的结果。这篇分析注解时，也是花费了一些时间才掌握了一些皮毛，很难驾驭整个思想和实现流程。忍不住去看了下《 spring 源码深度解析》，发现作者的分析解读要深刻和详细的多，让我顿时有看不下去，写不下去的顿挫感。还好，我等猿类一向喜欢挑战，自我鞭策。继续照着自己思路和水平写下去，看经典源码和看好书一样，岂能一遍就止。相信自己第二次，第三次读源码的时候，看到的是更加美丽的风景～<br>
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/10/23/Spring-beans（annotation）/#more" rel="contents">
               阅读全文 &raquo;
@@ -1198,7 +1443,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">7</span>
+              <span class="site-state-item-count">8</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
