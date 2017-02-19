@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.cn/"/>
-  <updated>2016-12-25T14:36:42.000Z</updated>
+  <updated>2017-02-19T12:37:52.000Z</updated>
   <id>http://xuyajun.cn/</id>
   
   <author>
@@ -14,6 +14,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>温故知新</title>
+    <link href="http://xuyajun.cn/2017/02/19/%E6%B8%A9%E6%95%85%E7%9F%A5%E6%96%B0/"/>
+    <id>http://xuyajun.cn/2017/02/19/温故知新/</id>
+    <published>2017-02-19T12:34:33.000Z</published>
+    <updated>2017-02-19T12:37:52.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>17 年的第一篇文字，来的有点迟。最近身边充斥着各种跳槽信息，毕竟年初。<a id="more"></a>工作了半年多，我也深知自己的处境，毕业没有选择去大公司，让自己处在一个比较安逸，可能已经逐渐失去竞争力而浑然不知的环境。居安思危，我回忆了下校招面试题，结合网上各种社招经验好文，尝试去回答。结果是有点被打击的，很多基础知识都已经记不太清。当然，如果真的准备跳槽，这些都是可以临时抱佛脚。为了方便自己能够随时迅速重拾这些基础知识，我打算在今年增开一个博文栏目，将这些面试必需的基础知识系统整理，就叫“温故知新”吧。而本文就是该栏目第一篇，分门别类的列出所需掌握的主知识点。</p>
+<h2 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h2><p><a href="">集合类源码剖析</a><br>JUC 类源码剖析<br>NIO 模型<br>多线程<br>虚拟机内幕<br>Web 框架<br>设计模式</p>
+<h2 id="数据结构与算法"><a href="#数据结构与算法" class="headerlink" title="数据结构与算法"></a>数据结构与算法</h2><h2 id="数据库"><a href="#数据库" class="headerlink" title="数据库"></a>数据库</h2><h2 id="计算机系统原理"><a href="#计算机系统原理" class="headerlink" title="计算机系统原理"></a>计算机系统原理</h2><h2 id="网络协议"><a href="#网络协议" class="headerlink" title="网络协议"></a>网络协议</h2><h2 id="操作系统"><a href="#操作系统" class="headerlink" title="操作系统"></a>操作系统</h2>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;17 年的第一篇文字，来的有点迟。最近身边充斥着各种跳槽信息，毕竟年初。
+    
+    </summary>
+    
+      <category term="温故知新" scheme="http://xuyajun.cn/categories/%E6%B8%A9%E6%95%85%E7%9F%A5%E6%96%B0/"/>
+    
+    
+  </entry>
   
   <entry>
     <title>Spring-context（cache）</title>
