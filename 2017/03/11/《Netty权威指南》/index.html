@@ -1,0 +1,1064 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="西西弗的神话" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="netty 已经是个非常成熟的通信框架，接触 netty 也比较早，但只限于自己做个简单的 demo，然后把 reactor 模型挂在嘴边。直到最近几个月负责公司的云打印机业务，用 netty 开发 tcp 服务器，才发现自己之前的云里雾里有点自欺欺人了。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Netty权威指南》">
+<meta property="og:url" content="http://xuyajun.cn/2017/03/11/《Netty权威指南》/index.html">
+<meta property="og:site_name" content="西西弗的神话">
+<meta property="og:description" content="netty 已经是个非常成熟的通信框架，接触 netty 也比较早，但只限于自己做个简单的 demo，然后把 reactor 模型挂在嘴边。直到最近几个月负责公司的云打印机业务，用 netty 开发 tcp 服务器，才发现自己之前的云里雾里有点自欺欺人了。">
+<meta property="og:image" content="http://xuyajun.cn/images/ByteBuf.png">
+<meta property="og:image" content="http://xuyajun.cn/images/Chunk.png">
+<meta property="og:updated_time" content="2017-03-11T10:03:17.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《Netty权威指南》">
+<meta name="twitter:description" content="netty 已经是个非常成熟的通信框架，接触 netty 也比较早，但只限于自己做个简单的 demo，然后把 reactor 模型挂在嘴边。直到最近几个月负责公司的云打印机业务，用 netty 开发 tcp 服务器，才发现自己之前的云里雾里有点自欺欺人了。">
+<meta name="twitter:image" content="http://xuyajun.cn/images/ByteBuf.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 6323887738936362000,
+      author: '楼主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xuyajun.cn/2017/03/11/《Netty权威指南》/"/>
+
+  <title> 《Netty权威指南》 | 西西弗的神话 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">西西弗的神话</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                《Netty权威指南》
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-03-11T17:59:52+08:00" content="2017-03-11">
+              2017-03-11
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/03/11/《Netty权威指南》/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/03/11/《Netty权威指南》/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2017/03/11/《Netty权威指南》/" class="leancloud_visitors" data-flag-title="《Netty权威指南》">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>netty 已经是个非常成熟的通信框架，接触 netty 也比较早，但只限于自己做个简单的 demo，然后把 reactor 模型挂在嘴边。直到最近几个月负责公司的云打印机业务，用 netty 开发 tcp 服务器，才发现自己之前的云里雾里有点自欺欺人了。<a id="more"></a> 当然，这也是一种进步，对之前的很多知识都有了更深刻精准的理解。</p>
+<p> netty 是个优秀的框架毋庸置疑，但我并不打算细读其源码，java 的开源框架太多，框架的开发之道都大同小异，选其一二细阅便可，我们关注的应该是每个框架独特功能的设计艺术。<br> netty 出现的背景不多介绍，这些个框架几乎都是开发者的银弹。自从有个 netty，我相信几乎不会有公司会使用原生的 nio 来开发应用了。当然，我们可以思考，怎么样使用原生的 nio 去开发一个高可用，高扩展，高性能的通信应用。如果你有很清晰的思路，再来看看 netty 或者 mina 这些，估计就有种惺惺相惜的感觉。<br>《Netty权威指南》这本书前半本都是讲 netty 的实际应用开发，主要是服务器端和客户端的创建。后面半本着重进行了重要模块的源码分析。在这里我就略过应用开发，从源码分析角度总结下 netty 的设计。（我们分析的是 netty 4.0 版本。）<br>就像 nio 由 selector，channel，buffer 这三个核心 API 组成一样，netty 也是由几个重要组件组成：</p>
+<ul>
+<li>ByteBuf</li>
+<li>Channel</li>
+<li>ChannelPipeLine</li>
+<li>EventLoop</li>
+</ul>
+<p>一一来看。</p>
+<h2 id="ByteBuf"><a href="#ByteBuf" class="headerlink" title="ByteBuf"></a>ByteBuf</h2><p>nio 是面向缓冲的，而原生的 ByteBuffer 太过于局限（比如长度固定）且易出错（比如 flip() 操作），因此，netty 实现了自己的 ByteBuf。ByteBuf 使用了 readerIndex 和 writerIndex 两个游标使我们更方便的读写数据。来看下 ByteBuf 的类图：<br><img src="/images/ByteBuf.png" alt="alt text"><br>从内存分配的角度看，ByteBuf 分为两类： </p>
+<ol>
+<li>堆内存（HeapByteBuf）:内存分配和回收速度快，由 jvm 管理。但如果进行 I/O 读写，需要多一次的内存复制，将堆内存对应的缓冲区数据复制到内核中；</li>
+<li>直接内存（DirectByteBuf）:这是 netty 的高性能因素之一，可以使用系统的直接内存，少一次内存复制，读写更快。但相对应的，分配和回收速度会慢一些。</li>
+</ol>
+<p>从内存回收的角度看，ByteBuf 分为两类：</p>
+<ol>
+<li>基于对象池的 ByteBuf：可以重用 ByteBuf 对象，提高内存使用率，避免重复分配对象和频繁 GC；</li>
+<li>普通 ByteBuf：每次都需要分配内存，使用完后等待回收。</li>
+</ol>
+<p>理解了这几类 ByteBuf 的存在，就不难理解为什么类图中有这些个子类了。<br>AbstractByteBuf 抽象类被称为是 ByteBuf 的 skeleton（骨骼），实现了大量读写方法。其中就包括 ByteBuf 的动态扩展特性。我们从源码来看下 ByteBuf 的扩容策略。</p>
+<pre><code>private int calculateNewCapacity(int minNewCapacity) {
+    final int maxCapacity = this.maxCapacity;
+    final int threshold = 1048576 * 4; // 4 MiB page
+
+    if (minNewCapacity == threshold) {
+        return threshold;
+    }
+
+    // If over threshold, do not double but just increase by threshold.
+    if (minNewCapacity &gt; threshold) {
+        int newCapacity = minNewCapacity / threshold * threshold;
+        if (newCapacity &gt; maxCapacity - threshold) {
+            newCapacity = maxCapacity;
+        } else {
+            newCapacity += threshold;
+        }
+        return newCapacity;
+    }
+
+    // Not over threshold. Double up to 4 MiB, starting from 64.
+    int newCapacity = 64;
+    while (newCapacity &lt; minNewCapacity) {
+        newCapacity &lt;&lt;= 1;
+    }
+
+    return Math.min(newCapacity, maxCapacity);
+}
+</code></pre><p>可以看到 netty 使用了大多数系统都会采用的先倍增后步进的策略，并将阀值设置为 4MB。当新容量小于阀值时，从 64 开始倍增，直到倍增后的结果大于容量值；当容量大于阀值时，采用以阀值步进的方式。通过这种策略，很好的实现了性能和功能的最优化。<br>再来看看另一个抽象类 AbstractReferenceCountedByteBuf 。该类主要是对引用进行计数，类似 JVM 内存回收的对象引用计数器，做自动内存回收。该类比较简单，主要有 retain0() 和 release0() 方法，分别对计数器进行增加和减少操作。看下 release0():</p>
+<pre><code>private boolean release0(int decrement) {
+    for (;;) {
+        int refCnt = this.refCnt;
+        if (refCnt &lt; decrement) {
+            throw new IllegalReferenceCountException(refCnt, -decrement);
+        }
+
+        if (refCntUpdater.compareAndSet(this, refCnt, refCnt - decrement)) {
+            if (refCnt == decrement) {
+                deallocate();
+                return true;
+            }
+            return false;
+        }
+    }
+}
+</code></pre><p>当 refCnt 为 1 时，就释放内存，deallocate() 由各个子类实现。而这种使用原子类的 CAS 来进行加减已经成为标准，不做详述。<br>Buffer 模块的源码难点在于 PooledByteBuf 内存池的设计，这里不做源码分析，简单描述下算法：netty 的 内存池管理类是 PoolArena 。 而 PoolArena 是由多个 PoolChunk 组成的大块内存区域，PoolChunk 又由多个 PoolSubpage 组成。Chunk 中的 Page 被构建成一颗二叉树，假如 Chunk 由 16 个 Page 组成，则将会以下图的结构组织起来。<br><img src="/images/Chunk.png" alt="alt text">     </p>
+<p>当需要分配内存，就会从这棵树上进行分配，并将标记节点的分配状态。<br>对于小于一个 Page 的内存分配，则在 Page 中完成，但每个 Page 会被切成大小相同的多个存储块，存储块的大小由第一次申请的内存块决定。<br>至于回收，通过状态位来标记内存是否可用，还记得上面提到的引用计数器吗，这时候就发挥作用了～ </p>
+<h2 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h2><p>Channel 是 Netty 网络操作接口，包含但不限于网路的读写，客户端发起连接，主动关闭连接，获取双方的网络地址，同时也包含了 Netty 框架相关的功能，比如获取该 Channel 的 EventLoop，获取缓冲分配器 ByteBufAllocator 和处理链 ChannelPineline。<br>Channel 的实现类实在太多，我们最熟悉的应该是 NioServerSocketChannel 和 NioSocketChannel 了。<br>要想了解 它们俩，还得先看下 channel 的骨骼类 AbstractChannel。AbstractChannel 看起来倒也不累，反倒觉得很简单，所有的网络事件都直接交给我们另一个组件 ChannelPineline 做了。自己实现了一些公共的 API，比如 localAddress()，功能只要与子类强相关，就将方法定义为抽象，交给子类实现。<br>继续看 AbstractNioChannel，到了这里，我们就有些熟悉感了，看到了点核心代码。</p>
+<pre><code>protected void doRegister() throws Exception {
+    boolean selected = false;
+    for (;;) {
+        try {
+            selectionKey = javaChannel().register(eventLoop().selector, 0, this);
+            return;
+        } catch (CancelledKeyException e) {
+            if (!selected) {
+                // Force the Selector to select now as the &quot;canceled&quot; SelectionKey may still be
+                // cached and not removed because no Select.select(..) operation was called yet.
+                eventLoop().selectNow();
+                selected = true;
+            } else {
+                // We forced a select operation on the selector before but the SelectionKey is still cached
+                // for whatever reason. JDK bug ?
+                throw e;
+            }
+        }
+    }
+}
+</code></pre><p>该方法实现了 Channel 的注册，继续进入 register() 方法会看到原生的 nio API。<br>来到最接近 NioSocketChannel 的类 AbstractNioByteChannel。里面只有一个成员变量：<br><code>private Runnable flushTask;</code><br>看下核心方法 doWrite()：</p>
+<pre><code>protected void doWrite(ChannelOutboundBuffer in) throws Exception {
+    int writeSpinCount = -1;
+
+    boolean setOpWrite = false;
+    for (;;) {
+        Object msg = in.current();
+        if (msg == null) {
+            // Wrote all messages.
+            clearOpWrite();
+            // Directly return here so incompleteWrite(...) is not called.
+            return;
+        }
+
+        if (msg instanceof ByteBuf) {
+            ByteBuf buf = (ByteBuf) msg;
+            int readableBytes = buf.readableBytes();
+            if (readableBytes == 0) {
+                in.remove();
+                continue;
+            }
+
+            boolean done = false;
+            long flushedAmount = 0;
+            if (writeSpinCount == -1) {
+                writeSpinCount = config().getWriteSpinCount();
+            }
+            for (int i = writeSpinCount - 1; i &gt;= 0; i --) {
+                int localFlushedAmount = doWriteBytes(buf);
+                if (localFlushedAmount == 0) {
+                    setOpWrite = true;
+                    break;
+                }
+
+                flushedAmount += localFlushedAmount;
+                if (!buf.isReadable()) {
+                    done = true;
+                    break;
+                }
+            }
+
+            in.progress(flushedAmount);
+
+            if (done) {
+                in.remove();
+            } else {
+                // Break the loop and so incompleteWrite(...) is called.
+                break;
+            }
+        } else if (msg instanceof FileRegion) {
+            FileRegion region = (FileRegion) msg;
+            boolean done = region.transfered() &gt;= region.count();
+
+            if (!done) {
+                long flushedAmount = 0;
+                if (writeSpinCount == -1) {
+                    writeSpinCount = config().getWriteSpinCount();
+                }
+
+                for (int i = writeSpinCount - 1; i &gt;= 0; i--) {
+                    long localFlushedAmount = doWriteFileRegion(region);
+                    if (localFlushedAmount == 0) {
+                        setOpWrite = true;
+                        break;
+                    }
+
+                    flushedAmount += localFlushedAmount;
+                    if (region.transfered() &gt;= region.count()) {
+                        done = true;
+                        break;
+                    }
+                }
+
+                in.progress(flushedAmount);
+            }
+
+            if (done) {
+                in.remove();
+            } else {
+                // Break the loop and so incompleteWrite(...) is called.
+                break;
+            }
+        } else {
+            // Should not reach here.
+            throw new Error();
+        }
+    }
+    incompleteWrite(setOpWrite);
+}
+</code></pre><p>有点长，来整理下逻辑： </p>
+<ol>
+<li>从消息环形数组 ChannelOutboundBuffer 中取出一条消息，如果空，则说明消息都发送完毕，清除半包标识，return；</li>
+<li>如果消息是 ByteBuf 类型，判断可读字节数，如果为 0，删除消息，continue；如果消息可发送，从配置对象中获取循环发送次数 writeSpinCount。设置写半包循环最大次数是为了防止 I/O 线程一直尝试写操作，这样造成其它 I/O 操作无法进行。经历 for循环后，如果发送成功，则将已发送的数据从 ChannelOutboundBuffer 中删除，否则 break，进入 incompleteWrite() 方法；</li>
+<li>如果消息是 FileRegion 类型（用于文件传输），处理逻辑和 ByteBuf 类型一样。</li>
+</ol>
+<p>至于 incompleteWrite() 方法，也来看下吧：</p>
+<pre><code>protected final void incompleteWrite(boolean setOpWrite) {
+        // Did not write completely.
+        if (setOpWrite) {
+            setOpWrite();
+        } else {
+            // Schedule flush again later so other tasks can be picked up in the meantime
+            Runnable flushTask = this.flushTask;
+            if (flushTask == null) {
+                flushTask = this.flushTask = new Runnable() {
+                    @Override
+                    public void run() {
+                        flush();
+                    }
+                };
+            }
+            eventLoop().execute(flushTask);
+        }
+    }
+</code></pre><p>总算看到唯一的成员变量 flushTask 派上用场了。首先判断是否需要设置写半包标识，也就是将 SelectionKey 设置成可写的。只要设置成可写，多路复用器会不停轮询对应的 channel，因此不需要再启动独立的线程。如果没有设置写操作位，则将 flushTask 加入到 EventLoop 中。<br>Channel 要想一整套看下来还是很耗精力的，由于设计方法的高超，到了 NioServerSocketChannel 这儿，其实已经不需要做什么事了。</p>
+<h2 id="ChannelPipeLine"><a href="#ChannelPipeLine" class="headerlink" title="ChannelPipeLine"></a>ChannelPipeLine</h2><p>真正处理业务逻辑的当属 ChannelPipeline 和 ChannelHandler 了。该模块理解起来很简单，类似于 web 中的过滤器，也就是使用责任链模式设计而成。这里就只提下自己遇到的坑：</p>
+<ol>
+<li>ChannelPipeline 线程安全，但 ChannelHandler 并非线程安全。鉴于我们自定义 handler 时都是采用注解 @Sharable ，也就是链路共用一个 handler，而非每条链路<br>都创建一个私有 handler，所有我们要保证 handler 的线程安全；</li>
+<li>继承 ByteToMessageDecoder 自定义解码器时，要注意读半包问题。</li>
+</ol>
+<h2 id="EventLoop"><a href="#EventLoop" class="headerlink" title="EventLoop"></a>EventLoop</h2><p>Netty 中的 NioEventLoop 对 nio 中的多路复用器 Selector 进行了装饰。之前自己写过的 nio 代码在该类都能找到点影子，来看段长代码 run() 方法：</p>
+<pre><code>protected void run() {
+    for (; ; ) {
+        try {
+            switch (selectStrategy.calculateStrategy(selectNowSupplier, hasTasks())) {
+                case SelectStrategy.CONTINUE:
+                    continue;
+                case SelectStrategy.SELECT:
+                    select(wakenUp.getAndSet(false));
+                    if (wakenUp.get()) {
+                        selector.wakeup();
+                    }
+                default:
+                    // fallthrough
+            }
+
+            cancelledKeys = 0;
+            needsToSelectAgain = false;
+            final int ioRatio = this.ioRatio;
+            if (ioRatio == 100) {
+                try {
+                    processSelectedKeys();
+                } finally {
+                    // Ensure we always run tasks.
+                    runAllTasks();
+                }
+            } else {
+                final long ioStartTime = System.nanoTime();
+                try {
+                    processSelectedKeys();
+                } finally {
+                    // Ensure we always run tasks.
+                    final long ioTime = System.nanoTime() - ioStartTime;
+                    runAllTasks(ioTime * (100 - ioRatio) / ioRatio);
+                }
+            }
+        } catch (Throwable t) {
+            handleLoopException(t);
+        }
+        // Always handle shutdown even if the loop processing threw an exception.
+        try {
+            if (isShuttingDown()) {
+                closeAll();
+                if (confirmShutdown()) {
+                    return;
+                }
+            }
+        } catch (Throwable t) {
+            handleLoopException(t);
+        }
+    }
+}
+</code></pre><p>老规矩，整理下逻辑：</p>
+<ol>
+<li>通过 hasTasks() 判断消息队列中是否有任务，如果没有，则调用 selector() 方法处理 I/O 事件；</li>
+<li>由于 NioEventLoop 需要同时处理 I/O 事件和非 I/O 任务，为了保证两者都能够被执行，Netty 提供了参数 ioRatio 来定义 I/O 事件处理时间比例，默认 50%。runAllTasks() 方法用来处理队列中的非 I/O 任务，并且分配的时间到了给定的时间就退出，等待下次处理；</li>
+<li>处理完所有事件后，判断系统是否进入优雅停机状态，如果关闭，则调用 closeAll()，释放资源，并让 NioEventLoop 线程退出循环。</li>
+</ol>
+<p>囫囵吞枣般的跟书浏览了下源码，虽然没有一步消化到位，不过对于理解 Netty 的设计思想和模块分工，还是很有作用，也解决了不少项目中遇到的问题。后期如果需要对 Netty 项目进行优化，再来进行进一步强化。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat-reward-image.png" alt="yajun xu WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay-reward-image.png" alt="yajun xu Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/02/19/温故知新/" rel="next" title="温故知新">
+                <i class="fa fa-chevron-left"></i> 温故知新
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/03/11/《Netty权威指南》/"
+           data-title="《Netty权威指南》" data-url="http://xuyajun.cn/2017/03/11/《Netty权威指南》/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/xyj.png"
+               alt="yajun xu" />
+          <p class="site-author-name" itemprop="name">yajun xu</p>
+          <p class="site-description motion-element" itemprop="description">当写代码的喜欢上哲学，那就要刨根问底了。。。</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">10</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://1316478764.iteye.com" target="_blank" title="ITeye">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  ITeye
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xuyajun1993" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ByteBuf"><span class="nav-number">1.</span> <span class="nav-text">ByteBuf</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Channel"><span class="nav-number">2.</span> <span class="nav-text">Channel</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ChannelPipeLine"><span class="nav-number">3.</span> <span class="nav-text">ChannelPipeLine</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EventLoop"><span class="nav-number">4.</span> <span class="nav-text">EventLoop</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yajun xu</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"xuyajun"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("zgEbXv2XxW6TVLWF1glVijuP-gzGzoHsz", "6CW9I1RWjdaFwrrVAJDrY9y4");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script type="text/javascript" async src="//push.zhanzhang.baidu.com/push.js">
+</script>
+
+
+</body>
+</html>
