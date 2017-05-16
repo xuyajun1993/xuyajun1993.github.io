@@ -1,0 +1,1152 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="西西弗的神话" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Spring-context(schedule)
+schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如何对任务调度进行抽象。为了加快理解源码的速度，先浏览下 schedule 模块的官方文档。看完该模块的 overview 后会发现，设计的思">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring-context（schedule）">
+<meta property="og:url" content="http://xuyajun.cn/2017/05/16/Spring-context（schedule）/index.html">
+<meta property="og:site_name" content="西西弗的神话">
+<meta property="og:description" content="Spring-context(schedule)
+schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如何对任务调度进行抽象。为了加快理解源码的速度，先浏览下 schedule 模块的官方文档。看完该模块的 overview 后会发现，设计的思">
+<meta property="og:image" content="http://xuyajun.cn/images/schedule.png">
+<meta property="og:updated_time" content="2017-05-16T15:32:14.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring-context（schedule）">
+<meta name="twitter:description" content="Spring-context(schedule)
+schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如何对任务调度进行抽象。为了加快理解源码的速度，先浏览下 schedule 模块的官方文档。看完该模块的 overview 后会发现，设计的思">
+<meta name="twitter:image" content="http://xuyajun.cn/images/schedule.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 6323887738936362000,
+      author: '楼主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xuyajun.cn/2017/05/16/Spring-context（schedule）/"/>
+
+  <title> Spring-context（schedule） | 西西弗的神话 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">西西弗的神话</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Spring-context（schedule）
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-05-16T23:19:02+08:00" content="2017-05-16">
+              2017-05-16
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Spring源码/" itemprop="url" rel="index">
+                    <span itemprop="name">Spring源码</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/05/16/Spring-context（schedule）/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/05/16/Spring-context（schedule）/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2017/05/16/Spring-context（schedule）/" class="leancloud_visitors" data-flag-title="Spring-context（schedule）">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Spring-context(schedule)</p>
+<p>schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如何对任务调度进行抽象。<br>为了加快理解源码的速度，先浏览下 schedule 模块的<a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#scheduling" target="_blank" rel="external">官方文档</a>。看完该模块的 overview 后会发现，设计的思想与缓存如出一辙。就连 package 都基本类似：<br><img src="/images/schedule.png" alt="alt text">  </p>
+<h2 id="Trigger"><a href="#Trigger" class="headerlink" title="Trigger"></a>Trigger</h2><p>Trigger 负责根据上次执行结果来决定下次执行时间，故接口只有一个方法： </p>
+<pre><code>Date nextExecutionTime(TriggerContext triggerContext);
+</code></pre><p>TriggerContext 也是一个接口，封装了上次执行的结果信息：</p>
+<pre><code>Date lastScheduledExecutionTime();//上次计划执行时间
+Date lastActualExecutionTime();//上次实际执行时间
+Date lastCompletionTime();//上次完成时间
+</code></pre><p>trigger 有两个子类，CronTrigger 和 PeriodicTrigger。先来看 CronTrigger。  </p>
+<h3 id="CronTrigger"><a href="#CronTrigger" class="headerlink" title="CronTrigger"></a>CronTrigger</h3><p>CronTrigger 基于 cron 表达式来调度任务。</p>
+<pre><code>private final CronSequenceGenerator sequenceGenerator;
+
+public Date nextExecutionTime(TriggerContext triggerContext) {
+        Date date = triggerContext.lastCompletionTime();
+        if (date != null) {
+            Date scheduled = triggerContext.lastScheduledExecutionTime();
+            if (scheduled != null &amp;&amp; date.before(scheduled)) {
+                // Previous task apparently executed too early...
+                // Let&apos;s simply use the last calculated execution time then,
+                // in order to prevent accidental re-fires in the same second.
+                date = scheduled;
+            }
+        }
+        else {
+            date = new Date();
+        }
+        return this.sequenceGenerator.next(date);
+    }
+</code></pre><p>很显然，CronSequenceGenerator 这个类负责解析 cron 表达式及确定下次执行时间。 让我们偏离主道，看下这个类，很涨姿势。</p>
+<h4 id="CronSequenceGenerator"><a href="#CronSequenceGenerator" class="headerlink" title="CronSequenceGenerator"></a>CronSequenceGenerator</h4><p>先看看 “0 0 <em> </em> <em> </em>” 这种表达式是如何被解析</p>
+<pre><code>private void parse(String expression) throws IllegalArgumentException {
+    String[] fields = StringUtils.tokenizeToStringArray(expression, &quot; &quot;);
+    if (fields.length != 6) {
+        throw new IllegalArgumentException(String.format(
+                &quot;Cron expression must consist of 6 fields (found %d in \&quot;%s\&quot;)&quot;, fields.length, expression));
+    }
+    setNumberHits(this.seconds, fields[0], 0, 60);
+    setNumberHits(this.minutes, fields[1], 0, 60);
+    setNumberHits(this.hours, fields[2], 0, 24);
+    setDaysOfMonth(this.daysOfMonth, fields[3]);
+    setMonths(this.months, fields[4]);
+    setDays(this.daysOfWeek, replaceOrdinals(fields[5], &quot;SUN,MON,TUE,WED,THU,FRI,SAT&quot;), 8);
+    if (this.daysOfWeek.get(7)) {
+        // Sunday can be represented as 0 or 7
+        this.daysOfWeek.set(0);
+        this.daysOfWeek.clear(7);
+    }
+}
+</code></pre><p>该类使用了 BitSet 来存储秒，分钟，小时（大家都知道存储大数据量时可以使用 bit-map 算法，没想到 java 实现了），继续进入 setNumberHits 方法。</p>
+<pre><code>private void setNumberHits(BitSet bits, String value, int min, int max) {
+    String[] fields = StringUtils.delimitedListToStringArray(value, &quot;,&quot;);
+    for (String field : fields) {
+        if (!field.contains(&quot;/&quot;)) {
+            // Not an incrementer so it must be a range (possibly empty)
+            int[] range = getRange(field, min, max);
+            bits.set(range[0], range[1] + 1);
+        }
+        else {
+            String[] split = StringUtils.delimitedListToStringArray(field, &quot;/&quot;);
+            if (split.length &gt; 2) {
+                throw new IllegalArgumentException(&quot;Incrementer has more than two fields: &apos;&quot; +
+                        field + &quot;&apos; in expression \&quot;&quot; + this.expression + &quot;\&quot;&quot;);
+            }
+            int[] range = getRange(split[0], min, max);
+            if (!split[0].contains(&quot;-&quot;)) {
+                range[1] = max - 1;
+            }
+            int delta = Integer.valueOf(split[1]);
+            if (delta &lt;= 0) {
+                throw new IllegalArgumentException(&quot;Incrementer delta must be 1 or higher: &apos;&quot; +
+                        field + &quot;&apos; in expression \&quot;&quot; + this.expression + &quot;\&quot;&quot;);
+            }
+            for (int i = range[0]; i &lt;= range[1]; i += delta) {
+                bits.set(i);
+            }
+        }
+    }
+}
+</code></pre><p>该方法是根据表达式，来标记被命中的秒／分／时，即将对应的 bit 设置为 true：</p>
+<pre><code>bits.set(i);
+</code></pre><p>要理解这个方法需要对 cron 表达式的语法有一定了解。这里不做细叙，迅速看完该类，回到主道。<br>知道了是怎么标识”秒，分，时，日，月，星期，年“计算下一个时间点就好办了。</p>
+<pre><code>private void doNext(Calendar calendar, int dot) {
+    List&lt;Integer&gt; resets = new ArrayList&lt;Integer&gt;();
+
+    int second = calendar.get(Calendar.SECOND);
+    List&lt;Integer&gt; emptyList = Collections.emptyList();
+    int updateSecond = findNext(this.seconds, second, calendar, Calendar.SECOND, Calendar.MINUTE, emptyList);
+    if (second == updateSecond) {
+        resets.add(Calendar.SECOND);
+    }
+
+    int minute = calendar.get(Calendar.MINUTE);
+    int updateMinute = findNext(this.minutes, minute, calendar, Calendar.MINUTE, Calendar.HOUR_OF_DAY, resets);
+    if (minute == updateMinute) {
+        resets.add(Calendar.MINUTE);
+    }
+    else {
+        doNext(calendar, dot);
+    }
+
+    int hour = calendar.get(Calendar.HOUR_OF_DAY);
+    int updateHour = findNext(this.hours, hour, calendar, Calendar.HOUR_OF_DAY, Calendar.DAY_OF_WEEK, resets);
+    if (hour == updateHour) {
+        resets.add(Calendar.HOUR_OF_DAY);
+    }
+    else {
+        doNext(calendar, dot);
+    }
+
+    int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+    int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+    int updateDayOfMonth = findNextDay(calendar, this.daysOfMonth, dayOfMonth, daysOfWeek, dayOfWeek, resets);
+    if (dayOfMonth == updateDayOfMonth) {
+        resets.add(Calendar.DAY_OF_MONTH);
+    }
+    else {
+        doNext(calendar, dot);
+    }
+
+    int month = calendar.get(Calendar.MONTH);
+    int updateMonth = findNext(this.months, month, calendar, Calendar.MONTH, Calendar.YEAR, resets);
+    if (month != updateMonth) {
+        if (calendar.get(Calendar.YEAR) - dot &gt; 4) {
+            throw new IllegalArgumentException(&quot;Invalid cron expression \&quot;&quot; + this.expression +
+                    &quot;\&quot; led to runaway search for next trigger&quot;);
+        }
+        doNext(calendar, dot);
+    }
+}
+</code></pre><p>findNext() 方法负责从 bitset 中找出下一个为 true 的值。  </p>
+<p>OK，cronTrigger到这，来看另一个开箱即用的触发器。 </p>
+<h3 id="PeriodicTrigger"><a href="#PeriodicTrigger" class="headerlink" title="PeriodicTrigger"></a>PeriodicTrigger</h3><p>顾名思义，周期性的触发器。周期性分为两种：fixedRate 和 fixedDelay。大家如果使用过线程池来实现简单定时任务，就应该不会陌生。前者是固定周期，而后者是相对上次执行完成的固定延迟。看下 nextExecutionTime 的实现就一目了然：</p>
+<pre><code>public Date nextExecutionTime(TriggerContext triggerContext) {
+        if (triggerContext.lastScheduledExecutionTime() == null) {
+            return new Date(System.currentTimeMillis() + this.initialDelay);
+        }
+        else if (this.fixedRate) {
+            return new Date(triggerContext.lastScheduledExecutionTime().getTime() + this.period);
+        }
+        return new Date(triggerContext.lastCompletionTime().getTime() + this.period);
+    }
+</code></pre><h2 id="Scheduler"><a href="#Scheduler" class="headerlink" title="Scheduler"></a>Scheduler</h2><p>TaskScheduler 根据定时任务的不同配置定义了不同接口：</p>
+<pre><code>public interface TaskScheduler {
+
+     ScheduledFuture schedule(Runnable task, Trigger trigger);
+
+       ScheduledFuture schedule(Runnable task, Date startTime);
+
+     ScheduledFuture scheduleAtFixedRate(Runnable task, Date startTime, long period);
+
+     ScheduledFuture scheduleAtFixedRate(Runnable task, long period);
+
+        ScheduledFuture scheduleWithFixedDelay(Runnable task, Date startTime, long delay);
+
+        ScheduledFuture scheduleWithFixedDelay(Runnable task, long delay);
+
+}
+</code></pre><p>有两个实现类，ThreadPoolTaskScheduler 和 ConcurrentTaskScheduler，大同小异，都使用了线程池。</p>
+<h2 id="Annotation"><a href="#Annotation" class="headerlink" title="Annotation"></a>Annotation</h2><h3 id="Scheduled"><a href="#Scheduled" class="headerlink" title="Scheduled"></a>Scheduled</h3><p>很常用的一个注解，一般会指定一个 cron 表达式，当然，也可以通过指定 fixedDelay 或者 fixedRate 参数来实现任务的定时执行。如果不适用硬编码，还可以通过 fixedRateString 和 fixedDelayString 参数从配置文件读取间隔时间。<br>来看重点类 ScheduledAnnotationBeanPostProcessor ，它负责 对 Scheduled 注解的任务进行注册。</p>
+<pre><code>private void processScheduled(Scheduled scheduled, Method method, Object bean) {
+        try {
+            Assert.isTrue(void.class.equals(method.getReturnType()),
+                    &quot;Only void-returning methods may be annotated with @Scheduled&quot;);
+            Assert.isTrue(method.getParameterTypes().length == 0,
+                    &quot;Only no-arg methods may be annotated with @Scheduled&quot;);
+
+        if (AopUtils.isJdkDynamicProxy(bean)) {
+            try {
+                // Found a @Scheduled method on the target class for this JDK proxy -&gt;
+                // is it also present on the proxy itself?
+                method = bean.getClass().getMethod(method.getName(), method.getParameterTypes());
+            }
+            catch (SecurityException ex) {
+                ReflectionUtils.handleReflectionException(ex);
+            }
+            catch (NoSuchMethodException ex) {
+                throw new IllegalStateException(String.format(
+                        &quot;@Scheduled method &apos;%s&apos; found on bean target class &apos;%s&apos; but not &quot; +
+                        &quot;found in any interface(s) for a dynamic proxy. Either pull the &quot; +
+                        &quot;method up to a declared interface or switch to subclass (CGLIB) &quot; +
+                        &quot;proxies by setting proxy-target-class/proxyTargetClass to &apos;true&apos;&quot;,
+                        method.getName(), method.getDeclaringClass().getSimpleName()));
+            }
+        }
+        else if (AopUtils.isCglibProxy(bean)) {
+            // Common problem: private methods end up in the proxy instance, not getting delegated.
+            if (Modifier.isPrivate(method.getModifiers())) {
+                LogFactory.getLog(ScheduledAnnotationBeanPostProcessor.class).warn(String.format(
+                        &quot;@Scheduled method &apos;%s&apos; found on CGLIB proxy for target class &apos;%s&apos; but cannot &quot; +
+                        &quot;be delegated to target bean. Switch its visibility to package or protected.&quot;,
+                        method.getName(), method.getDeclaringClass().getSimpleName()));
+            }
+        }
+
+        Runnable runnable = new ScheduledMethodRunnable(bean, method);
+        boolean processedSchedule = false;
+        String errorMessage =
+                &quot;Exactly one of the &apos;cron&apos;, &apos;fixedDelay(String)&apos;, or &apos;fixedRate(String)&apos; attributes is required&quot;;
+
+        // Determine initial delay
+        long initialDelay = scheduled.initialDelay();
+        String initialDelayString = scheduled.initialDelayString();
+        if (StringUtils.hasText(initialDelayString)) {
+            Assert.isTrue(initialDelay &lt; 0, &quot;Specify &apos;initialDelay&apos; or &apos;initialDelayString&apos;, not both&quot;);
+            if (this.embeddedValueResolver != null) {
+                initialDelayString = this.embeddedValueResolver.resolveStringValue(initialDelayString);
+            }
+            try {
+                initialDelay = Integer.parseInt(initialDelayString);
+            }
+            catch (NumberFormatException ex) {
+                throw new IllegalArgumentException(
+                        &quot;Invalid initialDelayString value \&quot;&quot; + initialDelayString + &quot;\&quot; - cannot parse into integer&quot;);
+            }
+        }
+
+        // Check cron expression
+        String cron = scheduled.cron();
+        if (StringUtils.hasText(cron)) {
+            Assert.isTrue(initialDelay == -1, &quot;&apos;initialDelay&apos; not supported for cron triggers&quot;);
+            processedSchedule = true;
+            if (this.embeddedValueResolver != null) {
+                cron = this.embeddedValueResolver.resolveStringValue(cron);
+            }
+            this.registrar.addCronTask(new CronTask(runnable, cron));
+        }
+        // At this point we don&apos;t need to differentiate between initial delay set or not anymore
+        if (initialDelay &lt; 0) {
+            initialDelay = 0;
+        }
+
+        // Check fixed delay
+        long fixedDelay = scheduled.fixedDelay();
+        if (fixedDelay &gt;= 0) {
+            Assert.isTrue(!processedSchedule, errorMessage);
+            processedSchedule = true;
+            this.registrar.addFixedDelayTask(new IntervalTask(runnable, fixedDelay, initialDelay));
+        }
+        String fixedDelayString = scheduled.fixedDelayString();
+        if (StringUtils.hasText(fixedDelayString)) {
+            Assert.isTrue(!processedSchedule, errorMessage);
+            processedSchedule = true;
+            if (this.embeddedValueResolver != null) {
+                fixedDelayString = this.embeddedValueResolver.resolveStringValue(fixedDelayString);
+            }
+            try {
+                fixedDelay = Integer.parseInt(fixedDelayString);
+            }
+            catch (NumberFormatException ex) {
+                throw new IllegalArgumentException(
+                        &quot;Invalid fixedDelayString value \&quot;&quot; + fixedDelayString + &quot;\&quot; - cannot parse into integer&quot;);
+            }
+            this.registrar.addFixedDelayTask(new IntervalTask(runnable, fixedDelay, initialDelay));
+        }
+
+        // Check fixed rate
+        long fixedRate = scheduled.fixedRate();
+        if (fixedRate &gt;= 0) {
+            Assert.isTrue(!processedSchedule, errorMessage);
+            processedSchedule = true;
+            this.registrar.addFixedRateTask(new IntervalTask(runnable, fixedRate, initialDelay));
+        }
+        String fixedRateString = scheduled.fixedRateString();
+        if (StringUtils.hasText(fixedRateString)) {
+            Assert.isTrue(!processedSchedule, errorMessage);
+            processedSchedule = true;
+            if (this.embeddedValueResolver != null) {
+                fixedRateString = this.embeddedValueResolver.resolveStringValue(fixedRateString);
+            }
+            try {
+                fixedRate = Integer.parseInt(fixedRateString);
+            }
+            catch (NumberFormatException ex) {
+                throw new IllegalArgumentException(
+                        &quot;Invalid fixedRateString value \&quot;&quot; + fixedRateString + &quot;\&quot; - cannot parse into integer&quot;);
+            }
+            this.registrar.addFixedRateTask(new IntervalTask(runnable, fixedRate, initialDelay));
+        }
+
+        // Check whether we had any attribute set
+        Assert.isTrue(processedSchedule, errorMessage);
+    }
+    catch (IllegalArgumentException ex) {
+        throw new IllegalStateException(
+                &quot;Encountered invalid @Scheduled method &apos;&quot; + method.getName() + &quot;&apos;: &quot; + ex.getMessage());
+    }
+}
+</code></pre><p>虽然代码这么长，但思路很简单，整理下：</p>
+<ol>
+<li>参数检验，被注解的方法必须是无参数且返回类型 void；</li>
+<li>类的合法性检验，如果是基于 jdk 代理，则必须实现接口，如果是 cglib 代理，方法不能为 private；</li>
+<li>检查 initialDelay 或 initialDelayString 参数，两个只能配置一个，如果配置的是 initialDelayString ，则赋值后将其转为 initialDelay；</li>
+<li>检查 cron 表达式，cron 表达式和 initialDelay 不能同时配置。构造 CronTask 任务放入 cronTasks 中，值得一提的是，CronTask 给每一个任务添加了 CronTrigger 触发器 ；</li>
+<li>检查 fixedDelay 参数，确保 cron，fixedDelay(String)，fixedRate(String) 只能配置一个。构造 IntervalTask 任务放入 fixedDelayTasks 中；</li>
+<li>检查 fixedRate 参数，构造 IntervalTask 任务放入 fixedRateTasks 中；</li>
+</ol>
+<p>看完怎么将 Scheduled 注解的方法构造成任务后，我们继续看任务的执行是怎么实现的。<br>ScheduledTaskRegistrar 类继承了 InitializingBean ，类加载完后执行 scheduleTasks 方法。</p>
+<pre><code>protected void scheduleTasks() {
+    long now = System.currentTimeMillis();
+
+    if (this.taskScheduler == null) {
+        this.localExecutor = Executors.newSingleThreadScheduledExecutor();
+        this.taskScheduler = new ConcurrentTaskScheduler(this.localExecutor);
+    }
+    if (this.triggerTasks != null) {
+        for (TriggerTask task : this.triggerTasks) {
+            this.scheduledFutures.add(this.taskScheduler.schedule(
+                    task.getRunnable(), task.getTrigger()));
+        }
+    }
+    if (this.cronTasks != null) {
+        for (CronTask task : this.cronTasks) {
+            this.scheduledFutures.add(this.taskScheduler.schedule(
+                    task.getRunnable(), task.getTrigger()));
+        }
+    }
+    if (this.fixedRateTasks != null) {
+        for (IntervalTask task : this.fixedRateTasks) {
+            if (task.getInitialDelay() &gt; 0) {
+                Date startTime = new Date(now + task.getInitialDelay());
+                this.scheduledFutures.add(this.taskScheduler.scheduleAtFixedRate(
+                        task.getRunnable(), startTime, task.getInterval()));
+            }
+            else {
+                this.scheduledFutures.add(this.taskScheduler.scheduleAtFixedRate(
+                        task.getRunnable(), task.getInterval()));
+            }
+        }
+    }
+    if (this.fixedDelayTasks != null) {
+        for (IntervalTask task : this.fixedDelayTasks) {
+            if (task.getInitialDelay() &gt; 0) {
+                Date startTime = new Date(now + task.getInitialDelay());
+                this.scheduledFutures.add(this.taskScheduler.scheduleWithFixedDelay(
+                        task.getRunnable(), startTime, task.getInterval()));
+            }
+            else {
+                this.scheduledFutures.add(this.taskScheduler.scheduleWithFixedDelay(
+                        task.getRunnable(), task.getInterval()));
+            }
+        }
+    }
+}
+</code></pre><p>上面已经先了解了 TaskScheduler，这段代码做的事情就很明了了，首先初始化好 TaskScheduler，然后将所有不同队列中的任务放入其中，剩下的就交给线程池了。值得注意的是：spring 默认使用一个线程执行所有的定时任务。所以，通常需要配置下线程池的大小：</p>
+<pre><code>&lt;task:scheduled-tasks scheduler=&quot;myScheduler&quot;&gt;
+    &lt;task:scheduled ref=&quot;beanA&quot; method=&quot;methodA&quot; fixed-delay=&quot;5000&quot; initial-delay=&quot;1000&quot;/&gt;
+    &lt;task:scheduled ref=&quot;beanB&quot; method=&quot;methodB&quot; fixed-rate=&quot;5000&quot;/&gt;
+    &lt;task:scheduled ref=&quot;beanC&quot; method=&quot;methodC&quot; cron=&quot;*/5 * * * * MON-FRI&quot;/&gt;
+&lt;/task:scheduled-tasks&gt;
+
+&lt;task:scheduler id=&quot;myScheduler&quot; pool-size=&quot;10&quot;/&gt;
+</code></pre><p>ok, schedule 模块的重点就先看到这里，虽然之前用过很多次，但看完源码之后，还是学到了很多配置的新方式。当然，看源码一方面是为了更好地使用  spring,另一方面更重要的是要从中学习其设计思想。fighting！</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat-reward-image.png" alt="yajun xu WeChat Pay"/>
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay-reward-image.png" alt="yajun xu Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/03/26/自省/" rel="next" title="自省">
+                <i class="fa fa-chevron-left"></i> 自省
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/05/16/Spring-context（schedule）/"
+           data-title="Spring-context（schedule）" data-url="http://xuyajun.cn/2017/05/16/Spring-context（schedule）/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/xyj.png"
+               alt="yajun xu" />
+          <p class="site-author-name" itemprop="name">yajun xu</p>
+          <p class="site-description motion-element" itemprop="description">当写代码的喜欢上哲学，那就要刨根问底了。。。</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">12</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://1316478764.iteye.com" target="_blank" title="ITeye">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  ITeye
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xuyajun1993" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Trigger"><span class="nav-number">1.</span> <span class="nav-text">Trigger</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CronTrigger"><span class="nav-number">1.1.</span> <span class="nav-text">CronTrigger</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CronSequenceGenerator"><span class="nav-number">1.1.1.</span> <span class="nav-text">CronSequenceGenerator</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PeriodicTrigger"><span class="nav-number">1.2.</span> <span class="nav-text">PeriodicTrigger</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Scheduler"><span class="nav-number">2.</span> <span class="nav-text">Scheduler</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Annotation"><span class="nav-number">3.</span> <span class="nav-text">Annotation</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Scheduled"><span class="nav-number">3.1.</span> <span class="nav-text">Scheduled</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yajun xu</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"xuyajun"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("zgEbXv2XxW6TVLWF1glVijuP-gzGzoHsz", "6CW9I1RWjdaFwrrVAJDrY9y4");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script type="text/javascript" async src="//push.zhanzhang.baidu.com/push.js">
+</script>
+
+
+</body>
+</html>

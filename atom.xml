@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.cn/"/>
-  <updated>2017-03-26T10:12:19.000Z</updated>
+  <updated>2017-05-16T15:32:14.000Z</updated>
   <id>http://xuyajun.cn/</id>
   
   <author>
@@ -14,6 +14,379 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Spring-context（schedule）</title>
+    <link href="http://xuyajun.cn/2017/05/16/Spring-context%EF%BC%88schedule%EF%BC%89/"/>
+    <id>http://xuyajun.cn/2017/05/16/Spring-context（schedule）/</id>
+    <published>2017-05-16T15:19:02.000Z</published>
+    <updated>2017-05-16T15:32:14.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>Spring-context(schedule)</p>
+<p>schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如何对任务调度进行抽象。<br>为了加快理解源码的速度，先浏览下 schedule 模块的<a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#scheduling" target="_blank" rel="external">官方文档</a>。看完该模块的 overview 后会发现，设计的思想与缓存如出一辙。就连 package 都基本类似：<br><img src="/images/schedule.png" alt="alt text">  </p>
+<h2 id="Trigger"><a href="#Trigger" class="headerlink" title="Trigger"></a>Trigger</h2><p>Trigger 负责根据上次执行结果来决定下次执行时间，故接口只有一个方法： </p>
+<pre><code>Date nextExecutionTime(TriggerContext triggerContext);
+</code></pre><p>TriggerContext 也是一个接口，封装了上次执行的结果信息：</p>
+<pre><code>Date lastScheduledExecutionTime();//上次计划执行时间
+Date lastActualExecutionTime();//上次实际执行时间
+Date lastCompletionTime();//上次完成时间
+</code></pre><p>trigger 有两个子类，CronTrigger 和 PeriodicTrigger。先来看 CronTrigger。  </p>
+<h3 id="CronTrigger"><a href="#CronTrigger" class="headerlink" title="CronTrigger"></a>CronTrigger</h3><p>CronTrigger 基于 cron 表达式来调度任务。</p>
+<pre><code>private final CronSequenceGenerator sequenceGenerator;
+
+public Date nextExecutionTime(TriggerContext triggerContext) {
+        Date date = triggerContext.lastCompletionTime();
+        if (date != null) {
+            Date scheduled = triggerContext.lastScheduledExecutionTime();
+            if (scheduled != null &amp;&amp; date.before(scheduled)) {
+                // Previous task apparently executed too early...
+                // Let&apos;s simply use the last calculated execution time then,
+                // in order to prevent accidental re-fires in the same second.
+                date = scheduled;
+            }
+        }
+        else {
+            date = new Date();
+        }
+        return this.sequenceGenerator.next(date);
+    }
+</code></pre><p>很显然，CronSequenceGenerator 这个类负责解析 cron 表达式及确定下次执行时间。 让我们偏离主道，看下这个类，很涨姿势。</p>
+<h4 id="CronSequenceGenerator"><a href="#CronSequenceGenerator" class="headerlink" title="CronSequenceGenerator"></a>CronSequenceGenerator</h4><p>先看看 “0 0 <em> </em> <em> </em>” 这种表达式是如何被解析</p>
+<pre><code>private void parse(String expression) throws IllegalArgumentException {
+    String[] fields = StringUtils.tokenizeToStringArray(expression, &quot; &quot;);
+    if (fields.length != 6) {
+        throw new IllegalArgumentException(String.format(
+                &quot;Cron expression must consist of 6 fields (found %d in \&quot;%s\&quot;)&quot;, fields.length, expression));
+    }
+    setNumberHits(this.seconds, fields[0], 0, 60);
+    setNumberHits(this.minutes, fields[1], 0, 60);
+    setNumberHits(this.hours, fields[2], 0, 24);
+    setDaysOfMonth(this.daysOfMonth, fields[3]);
+    setMonths(this.months, fields[4]);
+    setDays(this.daysOfWeek, replaceOrdinals(fields[5], &quot;SUN,MON,TUE,WED,THU,FRI,SAT&quot;), 8);
+    if (this.daysOfWeek.get(7)) {
+        // Sunday can be represented as 0 or 7
+        this.daysOfWeek.set(0);
+        this.daysOfWeek.clear(7);
+    }
+}
+</code></pre><p>该类使用了 BitSet 来存储秒，分钟，小时（大家都知道存储大数据量时可以使用 bit-map 算法，没想到 java 实现了），继续进入 setNumberHits 方法。</p>
+<pre><code>private void setNumberHits(BitSet bits, String value, int min, int max) {
+    String[] fields = StringUtils.delimitedListToStringArray(value, &quot;,&quot;);
+    for (String field : fields) {
+        if (!field.contains(&quot;/&quot;)) {
+            // Not an incrementer so it must be a range (possibly empty)
+            int[] range = getRange(field, min, max);
+            bits.set(range[0], range[1] + 1);
+        }
+        else {
+            String[] split = StringUtils.delimitedListToStringArray(field, &quot;/&quot;);
+            if (split.length &gt; 2) {
+                throw new IllegalArgumentException(&quot;Incrementer has more than two fields: &apos;&quot; +
+                        field + &quot;&apos; in expression \&quot;&quot; + this.expression + &quot;\&quot;&quot;);
+            }
+            int[] range = getRange(split[0], min, max);
+            if (!split[0].contains(&quot;-&quot;)) {
+                range[1] = max - 1;
+            }
+            int delta = Integer.valueOf(split[1]);
+            if (delta &lt;= 0) {
+                throw new IllegalArgumentException(&quot;Incrementer delta must be 1 or higher: &apos;&quot; +
+                        field + &quot;&apos; in expression \&quot;&quot; + this.expression + &quot;\&quot;&quot;);
+            }
+            for (int i = range[0]; i &lt;= range[1]; i += delta) {
+                bits.set(i);
+            }
+        }
+    }
+}
+</code></pre><p>该方法是根据表达式，来标记被命中的秒／分／时，即将对应的 bit 设置为 true：</p>
+<pre><code>bits.set(i);
+</code></pre><p>要理解这个方法需要对 cron 表达式的语法有一定了解。这里不做细叙，迅速看完该类，回到主道。<br>知道了是怎么标识”秒，分，时，日，月，星期，年“计算下一个时间点就好办了。</p>
+<pre><code>private void doNext(Calendar calendar, int dot) {
+    List&lt;Integer&gt; resets = new ArrayList&lt;Integer&gt;();
+
+    int second = calendar.get(Calendar.SECOND);
+    List&lt;Integer&gt; emptyList = Collections.emptyList();
+    int updateSecond = findNext(this.seconds, second, calendar, Calendar.SECOND, Calendar.MINUTE, emptyList);
+    if (second == updateSecond) {
+        resets.add(Calendar.SECOND);
+    }
+
+    int minute = calendar.get(Calendar.MINUTE);
+    int updateMinute = findNext(this.minutes, minute, calendar, Calendar.MINUTE, Calendar.HOUR_OF_DAY, resets);
+    if (minute == updateMinute) {
+        resets.add(Calendar.MINUTE);
+    }
+    else {
+        doNext(calendar, dot);
+    }
+
+    int hour = calendar.get(Calendar.HOUR_OF_DAY);
+    int updateHour = findNext(this.hours, hour, calendar, Calendar.HOUR_OF_DAY, Calendar.DAY_OF_WEEK, resets);
+    if (hour == updateHour) {
+        resets.add(Calendar.HOUR_OF_DAY);
+    }
+    else {
+        doNext(calendar, dot);
+    }
+
+    int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+    int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+    int updateDayOfMonth = findNextDay(calendar, this.daysOfMonth, dayOfMonth, daysOfWeek, dayOfWeek, resets);
+    if (dayOfMonth == updateDayOfMonth) {
+        resets.add(Calendar.DAY_OF_MONTH);
+    }
+    else {
+        doNext(calendar, dot);
+    }
+
+    int month = calendar.get(Calendar.MONTH);
+    int updateMonth = findNext(this.months, month, calendar, Calendar.MONTH, Calendar.YEAR, resets);
+    if (month != updateMonth) {
+        if (calendar.get(Calendar.YEAR) - dot &gt; 4) {
+            throw new IllegalArgumentException(&quot;Invalid cron expression \&quot;&quot; + this.expression +
+                    &quot;\&quot; led to runaway search for next trigger&quot;);
+        }
+        doNext(calendar, dot);
+    }
+}
+</code></pre><p>findNext() 方法负责从 bitset 中找出下一个为 true 的值。  </p>
+<p>OK，cronTrigger到这，来看另一个开箱即用的触发器。 </p>
+<h3 id="PeriodicTrigger"><a href="#PeriodicTrigger" class="headerlink" title="PeriodicTrigger"></a>PeriodicTrigger</h3><p>顾名思义，周期性的触发器。周期性分为两种：fixedRate 和 fixedDelay。大家如果使用过线程池来实现简单定时任务，就应该不会陌生。前者是固定周期，而后者是相对上次执行完成的固定延迟。看下 nextExecutionTime 的实现就一目了然：</p>
+<pre><code>public Date nextExecutionTime(TriggerContext triggerContext) {
+        if (triggerContext.lastScheduledExecutionTime() == null) {
+            return new Date(System.currentTimeMillis() + this.initialDelay);
+        }
+        else if (this.fixedRate) {
+            return new Date(triggerContext.lastScheduledExecutionTime().getTime() + this.period);
+        }
+        return new Date(triggerContext.lastCompletionTime().getTime() + this.period);
+    }
+</code></pre><h2 id="Scheduler"><a href="#Scheduler" class="headerlink" title="Scheduler"></a>Scheduler</h2><p>TaskScheduler 根据定时任务的不同配置定义了不同接口：</p>
+<pre><code>public interface TaskScheduler {
+
+     ScheduledFuture schedule(Runnable task, Trigger trigger);
+
+       ScheduledFuture schedule(Runnable task, Date startTime);
+
+     ScheduledFuture scheduleAtFixedRate(Runnable task, Date startTime, long period);
+
+     ScheduledFuture scheduleAtFixedRate(Runnable task, long period);
+
+        ScheduledFuture scheduleWithFixedDelay(Runnable task, Date startTime, long delay);
+
+        ScheduledFuture scheduleWithFixedDelay(Runnable task, long delay);
+
+}
+</code></pre><p>有两个实现类，ThreadPoolTaskScheduler 和 ConcurrentTaskScheduler，大同小异，都使用了线程池。</p>
+<h2 id="Annotation"><a href="#Annotation" class="headerlink" title="Annotation"></a>Annotation</h2><h3 id="Scheduled"><a href="#Scheduled" class="headerlink" title="Scheduled"></a>Scheduled</h3><p>很常用的一个注解，一般会指定一个 cron 表达式，当然，也可以通过指定 fixedDelay 或者 fixedRate 参数来实现任务的定时执行。如果不适用硬编码，还可以通过 fixedRateString 和 fixedDelayString 参数从配置文件读取间隔时间。<br>来看重点类 ScheduledAnnotationBeanPostProcessor ，它负责 对 Scheduled 注解的任务进行注册。</p>
+<pre><code>private void processScheduled(Scheduled scheduled, Method method, Object bean) {
+        try {
+            Assert.isTrue(void.class.equals(method.getReturnType()),
+                    &quot;Only void-returning methods may be annotated with @Scheduled&quot;);
+            Assert.isTrue(method.getParameterTypes().length == 0,
+                    &quot;Only no-arg methods may be annotated with @Scheduled&quot;);
+
+        if (AopUtils.isJdkDynamicProxy(bean)) {
+            try {
+                // Found a @Scheduled method on the target class for this JDK proxy -&gt;
+                // is it also present on the proxy itself?
+                method = bean.getClass().getMethod(method.getName(), method.getParameterTypes());
+            }
+            catch (SecurityException ex) {
+                ReflectionUtils.handleReflectionException(ex);
+            }
+            catch (NoSuchMethodException ex) {
+                throw new IllegalStateException(String.format(
+                        &quot;@Scheduled method &apos;%s&apos; found on bean target class &apos;%s&apos; but not &quot; +
+                        &quot;found in any interface(s) for a dynamic proxy. Either pull the &quot; +
+                        &quot;method up to a declared interface or switch to subclass (CGLIB) &quot; +
+                        &quot;proxies by setting proxy-target-class/proxyTargetClass to &apos;true&apos;&quot;,
+                        method.getName(), method.getDeclaringClass().getSimpleName()));
+            }
+        }
+        else if (AopUtils.isCglibProxy(bean)) {
+            // Common problem: private methods end up in the proxy instance, not getting delegated.
+            if (Modifier.isPrivate(method.getModifiers())) {
+                LogFactory.getLog(ScheduledAnnotationBeanPostProcessor.class).warn(String.format(
+                        &quot;@Scheduled method &apos;%s&apos; found on CGLIB proxy for target class &apos;%s&apos; but cannot &quot; +
+                        &quot;be delegated to target bean. Switch its visibility to package or protected.&quot;,
+                        method.getName(), method.getDeclaringClass().getSimpleName()));
+            }
+        }
+
+        Runnable runnable = new ScheduledMethodRunnable(bean, method);
+        boolean processedSchedule = false;
+        String errorMessage =
+                &quot;Exactly one of the &apos;cron&apos;, &apos;fixedDelay(String)&apos;, or &apos;fixedRate(String)&apos; attributes is required&quot;;
+
+        // Determine initial delay
+        long initialDelay = scheduled.initialDelay();
+        String initialDelayString = scheduled.initialDelayString();
+        if (StringUtils.hasText(initialDelayString)) {
+            Assert.isTrue(initialDelay &lt; 0, &quot;Specify &apos;initialDelay&apos; or &apos;initialDelayString&apos;, not both&quot;);
+            if (this.embeddedValueResolver != null) {
+                initialDelayString = this.embeddedValueResolver.resolveStringValue(initialDelayString);
+            }
+            try {
+                initialDelay = Integer.parseInt(initialDelayString);
+            }
+            catch (NumberFormatException ex) {
+                throw new IllegalArgumentException(
+                        &quot;Invalid initialDelayString value \&quot;&quot; + initialDelayString + &quot;\&quot; - cannot parse into integer&quot;);
+            }
+        }
+
+        // Check cron expression
+        String cron = scheduled.cron();
+        if (StringUtils.hasText(cron)) {
+            Assert.isTrue(initialDelay == -1, &quot;&apos;initialDelay&apos; not supported for cron triggers&quot;);
+            processedSchedule = true;
+            if (this.embeddedValueResolver != null) {
+                cron = this.embeddedValueResolver.resolveStringValue(cron);
+            }
+            this.registrar.addCronTask(new CronTask(runnable, cron));
+        }
+        // At this point we don&apos;t need to differentiate between initial delay set or not anymore
+        if (initialDelay &lt; 0) {
+            initialDelay = 0;
+        }
+
+        // Check fixed delay
+        long fixedDelay = scheduled.fixedDelay();
+        if (fixedDelay &gt;= 0) {
+            Assert.isTrue(!processedSchedule, errorMessage);
+            processedSchedule = true;
+            this.registrar.addFixedDelayTask(new IntervalTask(runnable, fixedDelay, initialDelay));
+        }
+        String fixedDelayString = scheduled.fixedDelayString();
+        if (StringUtils.hasText(fixedDelayString)) {
+            Assert.isTrue(!processedSchedule, errorMessage);
+            processedSchedule = true;
+            if (this.embeddedValueResolver != null) {
+                fixedDelayString = this.embeddedValueResolver.resolveStringValue(fixedDelayString);
+            }
+            try {
+                fixedDelay = Integer.parseInt(fixedDelayString);
+            }
+            catch (NumberFormatException ex) {
+                throw new IllegalArgumentException(
+                        &quot;Invalid fixedDelayString value \&quot;&quot; + fixedDelayString + &quot;\&quot; - cannot parse into integer&quot;);
+            }
+            this.registrar.addFixedDelayTask(new IntervalTask(runnable, fixedDelay, initialDelay));
+        }
+
+        // Check fixed rate
+        long fixedRate = scheduled.fixedRate();
+        if (fixedRate &gt;= 0) {
+            Assert.isTrue(!processedSchedule, errorMessage);
+            processedSchedule = true;
+            this.registrar.addFixedRateTask(new IntervalTask(runnable, fixedRate, initialDelay));
+        }
+        String fixedRateString = scheduled.fixedRateString();
+        if (StringUtils.hasText(fixedRateString)) {
+            Assert.isTrue(!processedSchedule, errorMessage);
+            processedSchedule = true;
+            if (this.embeddedValueResolver != null) {
+                fixedRateString = this.embeddedValueResolver.resolveStringValue(fixedRateString);
+            }
+            try {
+                fixedRate = Integer.parseInt(fixedRateString);
+            }
+            catch (NumberFormatException ex) {
+                throw new IllegalArgumentException(
+                        &quot;Invalid fixedRateString value \&quot;&quot; + fixedRateString + &quot;\&quot; - cannot parse into integer&quot;);
+            }
+            this.registrar.addFixedRateTask(new IntervalTask(runnable, fixedRate, initialDelay));
+        }
+
+        // Check whether we had any attribute set
+        Assert.isTrue(processedSchedule, errorMessage);
+    }
+    catch (IllegalArgumentException ex) {
+        throw new IllegalStateException(
+                &quot;Encountered invalid @Scheduled method &apos;&quot; + method.getName() + &quot;&apos;: &quot; + ex.getMessage());
+    }
+}
+</code></pre><p>虽然代码这么长，但思路很简单，整理下：</p>
+<ol>
+<li>参数检验，被注解的方法必须是无参数且返回类型 void；</li>
+<li>类的合法性检验，如果是基于 jdk 代理，则必须实现接口，如果是 cglib 代理，方法不能为 private；</li>
+<li>检查 initialDelay 或 initialDelayString 参数，两个只能配置一个，如果配置的是 initialDelayString ，则赋值后将其转为 initialDelay；</li>
+<li>检查 cron 表达式，cron 表达式和 initialDelay 不能同时配置。构造 CronTask 任务放入 cronTasks 中，值得一提的是，CronTask 给每一个任务添加了 CronTrigger 触发器 ；</li>
+<li>检查 fixedDelay 参数，确保 cron，fixedDelay(String)，fixedRate(String) 只能配置一个。构造 IntervalTask 任务放入 fixedDelayTasks 中；</li>
+<li>检查 fixedRate 参数，构造 IntervalTask 任务放入 fixedRateTasks 中；</li>
+</ol>
+<p>看完怎么将 Scheduled 注解的方法构造成任务后，我们继续看任务的执行是怎么实现的。<br>ScheduledTaskRegistrar 类继承了 InitializingBean ，类加载完后执行 scheduleTasks 方法。</p>
+<pre><code>protected void scheduleTasks() {
+    long now = System.currentTimeMillis();
+
+    if (this.taskScheduler == null) {
+        this.localExecutor = Executors.newSingleThreadScheduledExecutor();
+        this.taskScheduler = new ConcurrentTaskScheduler(this.localExecutor);
+    }
+    if (this.triggerTasks != null) {
+        for (TriggerTask task : this.triggerTasks) {
+            this.scheduledFutures.add(this.taskScheduler.schedule(
+                    task.getRunnable(), task.getTrigger()));
+        }
+    }
+    if (this.cronTasks != null) {
+        for (CronTask task : this.cronTasks) {
+            this.scheduledFutures.add(this.taskScheduler.schedule(
+                    task.getRunnable(), task.getTrigger()));
+        }
+    }
+    if (this.fixedRateTasks != null) {
+        for (IntervalTask task : this.fixedRateTasks) {
+            if (task.getInitialDelay() &gt; 0) {
+                Date startTime = new Date(now + task.getInitialDelay());
+                this.scheduledFutures.add(this.taskScheduler.scheduleAtFixedRate(
+                        task.getRunnable(), startTime, task.getInterval()));
+            }
+            else {
+                this.scheduledFutures.add(this.taskScheduler.scheduleAtFixedRate(
+                        task.getRunnable(), task.getInterval()));
+            }
+        }
+    }
+    if (this.fixedDelayTasks != null) {
+        for (IntervalTask task : this.fixedDelayTasks) {
+            if (task.getInitialDelay() &gt; 0) {
+                Date startTime = new Date(now + task.getInitialDelay());
+                this.scheduledFutures.add(this.taskScheduler.scheduleWithFixedDelay(
+                        task.getRunnable(), startTime, task.getInterval()));
+            }
+            else {
+                this.scheduledFutures.add(this.taskScheduler.scheduleWithFixedDelay(
+                        task.getRunnable(), task.getInterval()));
+            }
+        }
+    }
+}
+</code></pre><p>上面已经先了解了 TaskScheduler，这段代码做的事情就很明了了，首先初始化好 TaskScheduler，然后将所有不同队列中的任务放入其中，剩下的就交给线程池了。值得注意的是：spring 默认使用一个线程执行所有的定时任务。所以，通常需要配置下线程池的大小：</p>
+<pre><code>&lt;task:scheduled-tasks scheduler=&quot;myScheduler&quot;&gt;
+    &lt;task:scheduled ref=&quot;beanA&quot; method=&quot;methodA&quot; fixed-delay=&quot;5000&quot; initial-delay=&quot;1000&quot;/&gt;
+    &lt;task:scheduled ref=&quot;beanB&quot; method=&quot;methodB&quot; fixed-rate=&quot;5000&quot;/&gt;
+    &lt;task:scheduled ref=&quot;beanC&quot; method=&quot;methodC&quot; cron=&quot;*/5 * * * * MON-FRI&quot;/&gt;
+&lt;/task:scheduled-tasks&gt;
+
+&lt;task:scheduler id=&quot;myScheduler&quot; pool-size=&quot;10&quot;/&gt;
+</code></pre><p>ok, schedule 模块的重点就先看到这里，虽然之前用过很多次，但看完源码之后，还是学到了很多配置的新方式。当然，看源码一方面是为了更好地使用  spring,另一方面更重要的是要从中学习其设计思想。fighting！</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Spring-context(schedule)&lt;/p&gt;
+&lt;p&gt;schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如
+    
+    </summary>
+    
+      <category term="Spring源码" scheme="http://xuyajun.cn/categories/Spring%E6%BA%90%E7%A0%81/"/>
+    
+    
+  </entry>
   
   <entry>
     <title>自省</title>
