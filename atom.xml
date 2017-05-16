@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.cn/"/>
-  <updated>2017-05-16T15:32:14.000Z</updated>
+  <updated>2017-05-16T15:33:18.000Z</updated>
   <id>http://xuyajun.cn/</id>
   
   <author>
@@ -20,10 +20,9 @@
     <link href="http://xuyajun.cn/2017/05/16/Spring-context%EF%BC%88schedule%EF%BC%89/"/>
     <id>http://xuyajun.cn/2017/05/16/Spring-context（schedule）/</id>
     <published>2017-05-16T15:19:02.000Z</published>
-    <updated>2017-05-16T15:32:14.000Z</updated>
+    <updated>2017-05-16T15:33:18.000Z</updated>
     
-    <content type="html"><![CDATA[<p>Spring-context(schedule)</p>
-<p>schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如何对任务调度进行抽象。<br>为了加快理解源码的速度，先浏览下 schedule 模块的<a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#scheduling" target="_blank" rel="external">官方文档</a>。看完该模块的 overview 后会发现，设计的思想与缓存如出一辙。就连 package 都基本类似：<br><img src="/images/schedule.png" alt="alt text">  </p>
+    <content type="html"><![CDATA[<p>schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如何对任务调度进行抽象。 <a id="more"></a><br>为了加快理解源码的速度，先浏览下 schedule 模块的<a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#scheduling" target="_blank" rel="external">官方文档</a>。看完该模块的 overview 后会发现，设计的思想与缓存如出一辙。就连 package 都基本类似：<br><img src="/images/schedule.png" alt="alt text">  </p>
 <h2 id="Trigger"><a href="#Trigger" class="headerlink" title="Trigger"></a>Trigger</h2><p>Trigger 负责根据上次执行结果来决定下次执行时间，故接口只有一个方法： </p>
 <pre><code>Date nextExecutionTime(TriggerContext triggerContext);
 </code></pre><p>TriggerContext 也是一个接口，封装了上次执行的结果信息：</p>
@@ -378,8 +377,7 @@ public Date nextExecutionTime(TriggerContext triggerContext) {
     
     <summary type="html">
     
-      &lt;p&gt;Spring-context(schedule)&lt;/p&gt;
-&lt;p&gt;schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如
+      &lt;p&gt;schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如何对任务调度进行抽象。
     
     </summary>
     
