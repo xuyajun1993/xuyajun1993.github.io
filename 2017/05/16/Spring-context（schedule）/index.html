@@ -93,7 +93,7 @@
 <meta property="og:site_name" content="西西弗的神话">
 <meta property="og:description" content="schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如何对任务调度进行抽象。">
 <meta property="og:image" content="http://xuyajun.cn/images/schedule.png">
-<meta property="og:updated_time" content="2017-05-16T15:35:44.000Z">
+<meta property="og:updated_time" content="2017-05-21T07:33:23.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring-context（schedule）">
 <meta name="twitter:description" content="schedule task 在工作场景中应该是需要频繁使用的。实现方式也很多，常见的当属 spring 自带的注解实现以及 quartz 框架。至于底层原理，使用线程池必不可少。今天就来揭开 spring 是如何对任务调度进行抽象。">
@@ -109,8 +109,8 @@
     fancybox: true,
     motion: true,
     duoshuo: {
-      userId: 6323887738936362000,
-      author: '楼主'
+      userId: undefined,
+      author: '博主'
     }
   };
 </script>
@@ -300,13 +300,6 @@
 
           
             
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2017/05/16/Spring-context（schedule）/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/05/16/Spring-context（schedule）/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
           
 
           
@@ -363,7 +356,7 @@ public Date nextExecutionTime(TriggerContext triggerContext) {
         return this.sequenceGenerator.next(date);
     }
 </code></pre><p>很显然，CronSequenceGenerator 这个类负责解析 cron 表达式及确定下次执行时间。 让我们偏离主道，看下这个类，很涨姿势。</p>
-<h4 id="CronSequenceGenerator"><a href="#CronSequenceGenerator" class="headerlink" title="CronSequenceGenerator"></a>CronSequenceGenerator</h4><p>先看看 “0 0 * * * *” 这种表达式是如何被解析</p>
+<h4 id="CronSequenceGenerator"><a href="#CronSequenceGenerator" class="headerlink" title="CronSequenceGenerator"></a>CronSequenceGenerator</h4><p>先看看 “0 0 \<em> \</em> \<em> \</em>” 这种表达式是如何被解析</p>
 <pre><code>private void parse(String expression) throws IllegalArgumentException {
     String[] fields = StringUtils.tokenizeToStringArray(expression, &quot; &quot;);
     if (fields.length != 6) {
@@ -764,10 +757,6 @@ public Date nextExecutionTime(TriggerContext triggerContext) {
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2017/05/16/Spring-context（schedule）/"
-           data-title="Spring-context（schedule）" data-url="http://xuyajun.cn/2017/05/16/Spring-context（schedule）/">
-      </div>
-    
   </div>
 
 
@@ -997,30 +986,9 @@ public Date nextExecutionTime(TriggerContext triggerContext) {
 
   
 
-  
-    
-  
-
-  <script type="text/javascript">
-    var duoshuoQuery = {short_name:"xuyajun"};
-    (function() {
-      var ds = document.createElement('script');
-      ds.type = 'text/javascript';ds.async = true;
-      ds.id = 'duoshuo-script';
-      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-      ds.charset = 'UTF-8';
-      (document.getElementsByTagName('head')[0]
-      || document.getElementsByTagName('body')[0]).appendChild(ds);
-    })();
-  </script>
-
-  
-    
-    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
-    <script src="/js/src/hook-duoshuo.js"></script>
-  
 
 
+  
 
 
 
