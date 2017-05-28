@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.cn/"/>
-  <updated>2017-05-28T13:28:36.000Z</updated>
+  <updated>2017-05-28T13:35:51.000Z</updated>
   <id>http://xuyajun.cn/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://xuyajun.cn/2017/05/28/Spring-aop/"/>
     <id>http://xuyajun.cn/2017/05/28/Spring-aop/</id>
     <published>2017-05-28T13:00:28.000Z</published>
-    <updated>2017-05-28T13:28:36.000Z</updated>
+    <updated>2017-05-28T13:35:51.000Z</updated>
     
     <content type="html"><![CDATA[<p>端午节假期的第一天，一大早决定好接下来三天的菜谱，列个菜单，去超市屯了三天的食粮。中午要好好犒劳自己，按照和👶的新约定，今晚10点前要写出一篇有质量的博文，不然就要给👶发红包。本想发红包了事，假期第一天还是想舒舒服服的玩玩游戏，看看奇葩说，追追剧啥的。然刚好这期奇葩说激辩无上进心是否是错。得嘞，我错了，背上刚买的小背包，踏上图书馆之旅。。。<br><a id="more"></a></p>
 <p>今天来看下 AOP 吧，虽然 Java 也接触了三年了，但似乎一直忽略了 AOP。切面，通知这些基本要素也都忘的差不多了。今天来更深刻的认识一下吧。</p>
