@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xuyajun.cn/"/>
-  <updated>2017-05-28T13:02:25.000Z</updated>
+  <updated>2017-05-28T13:28:36.000Z</updated>
   <id>http://xuyajun.cn/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://xuyajun.cn/2017/05/28/Spring-aop/"/>
     <id>http://xuyajun.cn/2017/05/28/Spring-aop/</id>
     <published>2017-05-28T13:00:28.000Z</published>
-    <updated>2017-05-28T13:02:25.000Z</updated>
+    <updated>2017-05-28T13:28:36.000Z</updated>
     
     <content type="html"><![CDATA[<p>端午节假期的第一天，一大早决定好接下来三天的菜谱，列个菜单，去超市屯了三天的食粮。中午要好好犒劳自己，按照和👶的新约定，今晚10点前要写出一篇有质量的博文，不然就要给👶发红包。本想发红包了事，假期第一天还是想舒舒服服的玩玩游戏，看看奇葩说，追追剧啥的。然刚好这期奇葩说激辩无上进心是否是错。得嘞，我错了，背上刚买的小背包，踏上图书馆之旅。。。<br><a id="more"></a></p>
 <p>今天来看下 AOP 吧，虽然 Java 也接触了三年了，但似乎一直忽略了 AOP。切面，通知这些基本要素也都忘的差不多了。今天来更深刻的认识一下吧。</p>
@@ -36,7 +36,7 @@
 <li>织入（Weaving）：把切面连接到其它对象上，并创建一个被通知的对象，这样的行为就叫做织入。可以在编译时（使用 AspectJ），类加载时和运行时完成。 Spring 和其他纯 Java AOP 框架一样，在运行时完成织入 。</li>
 </ol>
 <p>确实，这些术语不太直观，需要仔细推敲加上代码 demo 才能理解。要想 once for all ，还是得粗暴的进入源码。来，一起。</p>
-<h2 id="源码窥探"><a href="#源码窥探" class="headerlink" title="源码窥探"></a>源码窥探</h2><p>从哪看起呢，之前都是自己肉眼先扫描下每个类，来强行梳理出一个逻辑。但 AOP 作为一个单独的模块，那么多个 class 文件，还这样做，未免太低效。差点忘记有《 spring 源码深度解析》这本书，学习下作者的思路。来，以 \<aop:aspectj-autoproxy> 这句配置作为入口。<br>全局搜索下 aspectj-autoproxy ，找到这个配置的解析器。不难发现 AopNamespaceHandler 这个类。看这行代码继续溯源：</aop:aspectj-autoproxy></p>
+<h2 id="源码窥探"><a href="#源码窥探" class="headerlink" title="源码窥探"></a>源码窥探</h2><p>从哪看起呢，之前都是自己肉眼先扫描下每个类，来强行梳理出一个逻辑。但 AOP 作为一个单独的模块，那么多个 class 文件，还这样做，未免太低效。差点忘记有《 spring 源码深度解析》这本书，学习下作者的思路。来，以 &lt;aop:aspectj-autoproxy/&gt; 这句配置作为入口。<br>全局搜索下 aspectj-autoproxy ，找到这个配置的解析器。不难发现 AopNamespaceHandler 这个类。看这行代码继续溯源：</p>
 <blockquote>
 <pre><code>registerBeanDefinitionParser(&quot;aspectj-autoproxy&quot;, new AspectJAutoProxyBeanDefinitionParser());
 </code></pre></blockquote>
@@ -51,9 +51,7 @@
     registerComponentIfNecessary(beanDefinition, parserContext);
 }
 </code></pre><p>一共三行，每行都是一个逻辑。</p>
-<ol>
-<li><p>注册或者升级 AnnotationAwareAspectJAutoProxyCreator</p>
-<p> 继续贴下一步的代码  </p>
+<h4 id="注册或者升级-AnnotationAwareAspectJAutoProxyCreator"><a href="#注册或者升级-AnnotationAwareAspectJAutoProxyCreator" class="headerlink" title="注册或者升级 AnnotationAwareAspectJAutoProxyCreator"></a>注册或者升级 AnnotationAwareAspectJAutoProxyCreator</h4><p>继续贴下一步的代码  </p>
 <pre><code>public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(BeanDefinitionRegistry registry, Object source) {
     return registerOrEscalateApcAsRequired(AnnotationAwareAspectJAutoProxyCreator.class, registry, source);
 }
@@ -78,12 +76,8 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
     registry.registerBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME, beanDefinition);
     return beanDefinition;
 }
-</code></pre></li>
-</ol>
-<pre><code>如果已经有了自动代理创建器，则选择优先级高的创建器。至于这个自动代理创建器，在温习几个术语的时候已经知道，要想对一个类进行功能增强，需要创建一个代理类。有意思的是，因为 spring 本身就是基于代理的系统，所以 AOP 的功能就是代理中的代理去创建类。。。
-</code></pre><ol>
-<li><p>处理 proxy-target-class 和 expose-proxy 属性</p>
-<pre><code>private static void useClassProxyingIfNecessary(BeanDefinitionRegistry registry, Element sourceElement) {
+</code></pre><p>如果已经有了自动代理创建器，则选择优先级高的创建器。至于这个自动代理创建器，在温习几个术语的时候已经知道，要想对一个类进行功能增强，需要创建一个代理类。有意思的是，因为 spring 本身就是基于代理的系统，所以 AOP 的功能就是代理中的代理去创建类。。。</p>
+<h4 id="处理-proxy-target-class-和-expose-proxy-属性"><a href="#处理-proxy-target-class-和-expose-proxy-属性" class="headerlink" title="处理 proxy-target-class 和 expose-proxy 属性"></a>处理 proxy-target-class 和 expose-proxy 属性</h4><pre><code>private static void useClassProxyingIfNecessary(BeanDefinitionRegistry registry, Element sourceElement) {
     if (sourceElement != null) {
         boolean proxyTargetClass = Boolean.valueOf(sourceElement.getAttribute(PROXY_TARGET_CLASS_ATTRIBUTE));
         if (proxyTargetClass) {
@@ -95,12 +89,8 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
         }
     }
 }
-</code></pre><p> 如果 proxy-target-class 设置为 true，则强制使用 cglib 代理。如果 expose-proxy 设置为 true，则支持目标对象内部的自我方法调用也能增强。（上面说了，类功能的增强是通过代理类，但是如果调用内部的方法，则走的不是代理，造成方法增强失效！这块可以看官方文档中关于 AOP 代理这一小节） </p>
-</li>
-<li><p>注册组建通知（具体不详究）</p>
-</li>
-</ol>
-<h3 id="AspectJAwareAdvisorAutoProxyCreator"><a href="#AspectJAwareAdvisorAutoProxyCreator" class="headerlink" title="AspectJAwareAdvisorAutoProxyCreator"></a>AspectJAwareAdvisorAutoProxyCreator</h3><p>上面说到打开了 AOP 配置的开关后，第一件事就是创建自动代理创建器。下面就来看看这个创建器是怎么扫描 aop 注解并创建代理增强类的功能的（高能预警，下面是一段漫长的追寻之路）。<br>AspectJAwareAdvisorAutoProxyCreator 继承了 BeanPostProcessor，所以以 postProcessAfterInitialization 这个方法为入口。</p>
+</code></pre><p>如果 proxy-target-class 设置为 true，则强制使用 cglib 代理。如果 expose-proxy 设置为 true，则支持目标对象内部的自我方法调用也能增强。（上面说了，类功能的增强是通过代理类，但是如果调用内部的方法，则走的不是代理，造成方法增强失效！这块可以看官方文档中关于 AOP 代理这一小节） </p>
+<h4 id="注册组建通知（具体不详究）"><a href="#注册组建通知（具体不详究）" class="headerlink" title="注册组建通知（具体不详究）"></a>注册组建通知（具体不详究）</h4><h3 id="AspectJAwareAdvisorAutoProxyCreator"><a href="#AspectJAwareAdvisorAutoProxyCreator" class="headerlink" title="AspectJAwareAdvisorAutoProxyCreator"></a>AspectJAwareAdvisorAutoProxyCreator</h3><p>上面说到打开了 AOP 配置的开关后，第一件事就是创建自动代理创建器。下面就来看看这个创建器是怎么扫描 aop 注解并创建代理增强类的功能的（高能预警，下面是一段漫长的追寻之路）。<br>AspectJAwareAdvisorAutoProxyCreator 继承了 BeanPostProcessor，所以以 postProcessAfterInitialization 这个方法为入口。</p>
 <pre><code>public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
     if (bean != null) {
         Object cacheKey = getCacheKey(bean.getClass(), beanName);
@@ -135,7 +125,7 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
     this.advisedBeans.put(cacheKey, Boolean.FALSE);
     return bean;
 }
-</code></pre><p>如果不是 AOP 的基础类，则予以代理。似乎到此结束，毕竟看到了为需要的方法创建代理我们就放心了。别急，重点在于怎么获取需要增强的方法。</p>
+</code></pre><p>如果不是 AOP 的基础类，则予以代理。似乎到此结束，毕竟看到了为需要的方法创建代理我们就放心了。别急，再看点细节。</p>
 <pre><code>protected Object[] getAdvicesAndAdvisorsForBean(Class beanClass, String beanName, TargetSource targetSource) {
     List advisors = findEligibleAdvisors(beanClass, beanName);
     if (advisors.isEmpty()) {
@@ -153,9 +143,7 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
     }
     return eligibleAdvisors;
 }
-</code></pre><ol>
-<li><p>首先获取候选的增强器</p>
-<pre><code>public List&lt;Advisor&gt; findAdvisorBeans() {
+</code></pre><h4 id="获取候选的增强器"><a href="#获取候选的增强器" class="headerlink" title="获取候选的增强器"></a>获取候选的增强器</h4><pre><code>public List&lt;Advisor&gt; findAdvisorBeans() {
     // Determine list of advisor bean names, if not cached already.
     String[] advisorNames = null;
     synchronized (this) {
@@ -205,9 +193,7 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
     }
     return advisors;
 }
-</code></pre></li>
-<li><p>筛选出适用于 bean 的增强器</p>
-<pre><code>public static List&lt;Advisor&gt; findAdvisorsThatCanApply(List&lt;Advisor&gt; candidateAdvisors, Class&lt;?&gt; clazz) {
+</code></pre><h4 id="筛选出适用于-bean-的增强器"><a href="#筛选出适用于-bean-的增强器" class="headerlink" title="筛选出适用于 bean 的增强器"></a>筛选出适用于 bean 的增强器</h4><pre><code>public static List&lt;Advisor&gt; findAdvisorsThatCanApply(List&lt;Advisor&gt; candidateAdvisors, Class&lt;?&gt; clazz) {
     if (candidateAdvisors.isEmpty()) {
         return candidateAdvisors;
     }
@@ -229,8 +215,10 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
     }
     return eligibleAdvisors;
 }
-</code></pre><p> 首先处理引入增强，然后处理其他的。最终的匹配在下面方法中处理。</p>
-<pre><code>    public static boolean canApply(Pointcut pc, Class&lt;?&gt; targetClass, boolean hasIntroductions) {
+
+首先处理引入增强，然后处理其他的。最终的匹配在下面方法中处理。
+
+public static boolean canApply(Pointcut pc, Class&lt;?&gt; targetClass, boolean hasIntroductions) {
     Assert.notNull(pc, &quot;Pointcut must not be null&quot;);
     if (!pc.getClassFilter().matches(targetClass)) {
         return false;
@@ -257,9 +245,7 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
 
     return false;
 }
-</code></pre></li>
-<li><p>创建代理</p>
-<pre><code>protected Object createProxy(
+</code></pre><h4 id="创建代理"><a href="#创建代理" class="headerlink" title="创建代理"></a>创建代理</h4><pre><code>protected Object createProxy(
         Class&lt;?&gt; beanClass, String beanName, Object[] specificInterceptors, TargetSource targetSource) {
 
     ProxyFactory proxyFactory = new ProxyFactory();
@@ -290,17 +276,18 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
 
     return proxyFactory.getProxy(this.proxyClassLoader);
 }
-</code></pre><p> 到这里似乎有点熟悉的代理代码的影子了。</p>
+</code></pre><p>到这里似乎有点熟悉的代理代码的影子了。</p>
 <ul>
 <li>添加当前类的属性</li>
 <li>扫描类的所有接口，添加进代理</li>
 <li>封装增强器加入代理</li>
 <li>设置要代理的类</li>
 <li>定制化</li>
-<li><p>返回代理类</p>
+<li>返回代理类</li>
+</ul>
 <p>在最后一步返回代理类，会首先判断选择代理方式，有两种实现，分别是 jdk 动态代理或者 cglib。直接把代理贴出来吧：</p>
-<p>  public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {</p>
-<pre><code>    if (config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config)) {
+<pre><code>public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
+    if (config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config)) {
         Class targetClass = config.getTargetClass();
         if (targetClass == null) {
             throw new AopConfigException(&quot;TargetSource cannot determine target class: &quot; +
@@ -315,9 +302,7 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
         return new JdkDynamicAopProxy(config);
     }
 }
-</code></pre></li>
-</ul>
-<p>jdk 动态代理创建对象的实现：</p>
+</code></pre><p>jdk 动态代理创建对象的实现：</p>
 <pre><code> public Object getProxy(ClassLoader classLoader) {
     if (logger.isDebugEnabled()) {
         logger.debug(&quot;Creating JDK dynamic proxy: target source is &quot; + this.advised.getTargetSource());
@@ -326,7 +311,7 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
     findDefinedEqualsAndHashCodeMethods(proxiedInterfaces);
     return Proxy.newProxyInstance(classLoader, proxiedInterfaces, this);
 }
-</code></pre><p> cglib 代理创建对象的实现：</p>
+</code></pre><p>cglib 代理创建对象的实现：</p>
 <pre><code>public Object getProxy(ClassLoader classLoader) {
     if (logger.isDebugEnabled()) {
         logger.debug(&quot;Creating CGLIB proxy: target source is &quot; + this.advised.getTargetSource());
@@ -401,9 +386,7 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class cls, BeanDef
         throw new AopConfigException(&quot;Unexpected AOP exception&quot;, ex);
     }
 }
-</code></pre></li>
-</ol>
-<p>不知不觉已到傍晚，跟着书走了一遍源码，然而还是很吃力，一些细节还是不能准确分析。当然，也没必要深究到每一行代码，aop 的构成，代理的选择等主干路走过就行。</p>
+</code></pre><p>不知不觉已到傍晚，跟着书走了一遍源码，然而还是很吃力，一些细节还是不能准确分析。当然，也没必要深究到每一行代码，aop 的构成，代理的选择等主干路走过就行。</p>
 ]]></content>
     
     <summary type="html">
